@@ -11,10 +11,18 @@ FetchContent_Declare(
         GIT_TAG master  # Changed from 5.0 to master to fix the version error
 )
 FetchContent_MakeAvailable(raylib)
+# Tell CMake to look in the 'include' folder for headers
+include_directories(include)
 
 # --- 2. Add Your Source Files ---
 add_executable(CS163_DataVis
-        main.cpp
+        src/main.cpp
+        include/Global.h
+        include/Visualizer.h
+        src/Visualizer.cpp
+        include/VisualNode.h
+        include/DataStructures/DoublyLinkedList.h
+        src/DataStructures/DoublyLinkedList.cpp
 )
 
 # --- 3. Link Raylib to your app ---

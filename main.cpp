@@ -1,16 +1,46 @@
-#include <iostream>
+#include "raylib.h"
 
-// TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+// This Define is required ONLY in one file (main.cpp) to enable the button logic
+#define RAYGUI_IMPLEMENTATION
+#include "raygui.h"
+
 int main() {
-    // TIP Press <shortcut actionId="RenameElement"/> when your caret is at the <b>lang</b> variable name to see how CLion can help you rename it.
-    auto lang = "C++";
-    std::cout << "Hello and welcome to " << lang << "!\n";
+    // 1. Initialize Window
+    InitWindow(1280, 720, "CS163: Data Structures Project");
+    SetTargetFPS(60);
 
-    for (int i = 1; i <= 5; i++) {
-        // TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-        std::cout << "i = " << i << std::endl;
+    // 2. Simple State Variable (The "Data")
+    int ballX = 100;
+
+    // 3. Main Loop
+    while (!WindowShouldClose()) {
+
+        // --- UPDATE ---
+
+        // --- DRAW ---
+        BeginDrawing();
+        ClearBackground(RAYWHITE);
+
+        // Draw Title
+        DrawText("Phase 0: Setup Complete", 20, 20, 30, DARKGRAY);
+
+        // Draw Visualization (The Ball)
+        DrawCircle(ballX, 360, 50, MAROON);
+
+        // Draw Controls (Raygui)
+        // If "Next" button is clicked, move ball right
+        if (GuiButton((Rectangle){ 500, 600, 100, 40 }, "NEXT STEP")) {
+            ballX += 50;
+        }
+
+        // Reset Button
+        if (GuiButton((Rectangle){ 300, 600, 100, 40 }, "RESET")) {
+            ballX = 100;
+        }
+
+        EndDrawing();
     }
 
+    CloseWindow();
     return 0;
-    // TIP See CLion help at <a href="https://www.jetbrains.com/help/clion/">jetbrains.com/help/clion/</a>. Also, you can try interactive lessons for CLion by selecting 'Help | Learn IDE Features' from the main menu.
 }

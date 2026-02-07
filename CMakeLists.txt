@@ -18,11 +18,22 @@ include_directories(include)
 add_executable(CS163_DataVis
         src/main.cpp
         include/Global.h
-        include/Visualizer.h
-        src/Visualizer.cpp
+        include/DataStructures/Visualizer.h
+        src/DataStructures/Visualizer.cpp
         include/VisualNode.h
         include/DataStructures/DoublyLinkedList.h
         src/DataStructures/DoublyLinkedList.cpp
+        src/States/MenuState.cpp
+        src/States/DLLState.cpp
+        src/GUI/Toolbar.cpp
+        src/App.cpp
+        src/States/SelectState.cpp
+        include/GUI/Toolbar.h
+        include/States/MenuState.h
+        include/States/DLLState.h
+        include/States/SelectState.h
+        include/States/State.h
+        include/App.h
 )
 
 # --- 3. Link Raylib to your app ---

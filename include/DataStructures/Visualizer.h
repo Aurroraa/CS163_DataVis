@@ -1,7 +1,7 @@
 #pragma once
-#include "Global.h"
+#include "../Global.h"
 #include <vector>
-#include "VisualNode.h"
+#include "../VisualNode.h"
 
 class Visualizer {
 private:

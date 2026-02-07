@@ -1,9 +1,9 @@
-#include "../include/Visualizer.h" // Note the path!
+#include "../../include/DataStructures/Visualizer.h"
 #include "raylib.h"
 
 // Required for Raygui to work
 #define RAYGUI_IMPLEMENTATION
-#include "../include/raygui.h"
+#include "../../include/raygui.h"
 #include "DataStructures/DoublyLinkedList.h"
 
 Visualizer* globalApp = nullptr;

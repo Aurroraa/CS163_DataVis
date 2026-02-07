@@ -1,5 +1,5 @@
 #include "DataStructures/DoublyLinkedList.h"
-#include "Visualizer.h"
+#include "../../include/DataStructures/Visualizer.h"
 
 using namespace std;
 

@@ -1,6 +1,7 @@
-#include "../include/App.h"
+#define RAYGUI_IMPLEMENTATION
+#include "raygui.h"
 #include "../include/States/MenuState.h"
-
+#include "../include/App.h"
 // Start the app with MenuState
 int main() {
     App app;

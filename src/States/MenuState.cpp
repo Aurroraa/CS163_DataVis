@@ -1,6 +1,7 @@
 #include "../../include/States/MenuState.h"
 #include "../../include/raygui.h" // Assuming you have raygui setup
 #include "../../include/App.h"
+#include "../../include/States/SelectState.h"
 
 void MenuState::Init() {
     // Load background images or fonts here if needed
@@ -17,8 +18,8 @@ void MenuState::Draw() {
     
     // Buttons
     if (GuiButton((Rectangle){600, 300, 200, 50}, "START")) {
-        // TODO: Switch to Selection State
-        // g_App->ChangeState(new SelectState());
+        // Switch to Selection Screen
+        g_App->ChangeState(new SelectState());
     }
 
     if (GuiButton((Rectangle){600, 400, 200, 50}, "EXIT")) {

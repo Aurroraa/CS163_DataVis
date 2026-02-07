@@ -1,17 +1,31 @@
-#include "DataStructures/DoublyLinkedList.h"
-#include "../../include/DataStructures/Visualizer.h"
+#include "../../include/DataStructures/DoublyLinkedList.h"
+#include "../../include/Visualizer.h" // Access the Singleton
+#include <string>
+#include <vector>
 
 using namespace std;
 
-extern Visualizer* globalApp;
+// REMOVED: extern Visualizer* globalApp;  <-- This was causing the error!
 
-DoublyLinkedList::DoublyLinkedList(){
+DoublyLinkedList::DoublyLinkedList() {
     head = nullptr;
     tail = nullptr;
 }
 
+DoublyLinkedList::~DoublyLinkedList() {
+    DLLNode* current = head;
+    while (current != nullptr) {
+        DLLNode* next = current->next;
+        delete current;
+        current = next;
+    }
+    head = nullptr;
+    tail = nullptr;
+}
+
+// Helper to capture the current state of the list for the animation
 vector<VisualNode> DoublyLinkedList::captureState() {
-    std::vector<VisualNode> visuals;
+    vector<VisualNode> visuals;
     DLLNode* current = head;
     int index = 0;
 
@@ -19,14 +33,12 @@ vector<VisualNode> DoublyLinkedList::captureState() {
         VisualNode v;
         v.id = index;
         v.data = current->data;
-
-        // Calculate Position: Line them up horizontally
+        // Simple positioning: Start at x=100, space them out by 120px
         v.x = 100 + index * 120;
         v.y = 300;
+        v.color = BLUE; // Default color
 
-        v.color = PRIMARY_COLOR; // Default Blue
-
-        // Map pointers to indices for the visualizer
+        // Link logic for the renderer
         v.nextNodeIndex = (current->next != nullptr) ? index + 1 : -1;
         v.prevNodeIndex = (current->prev != nullptr) ? index - 1 : -1;
 
@@ -37,9 +49,17 @@ vector<VisualNode> DoublyLinkedList::captureState() {
     return visuals;
 }
 
-
 void DoublyLinkedList::init(vector<int> values) {
+    // 1. Clear old memory if any
+    DLLNode* current = head;
+    while (current != nullptr) {
+        DLLNode* next = current->next;
+        delete current;
+        current = next;
+    }
+    head = tail = nullptr;
 
+    // 2. Build new list
     for (int val : values) {
         DLLNode* newNode = new DLLNode{val, nullptr, nullptr};
         if (!head) {
@@ -51,108 +71,104 @@ void DoublyLinkedList::init(vector<int> values) {
         }
     }
 
-    if (globalApp) {
-        // captureState() converts our pointers to draw-able data
-        globalApp->recordState("Initialized List from file", 0, captureState());
-    }
+    // 3. Record the initial state
+    // We pass empty code lines {} because this isn't an algorithm step
+    Visualizer::Instance().RecordState("Initialized List", 0, captureState(), {});
 }
 
 void DoublyLinkedList::addHead(int value) {
-
-    if (globalApp) {
-        globalApp->setCodeLines({
-            "Algorithm: Add to Head",
-            "1. Create a new node with value " + std::to_string(value),
-            "2. If list is empty, set Head = New Node",
-            "3. Else: Link New Node -> Old Head",
-            "4.       Link Old Head <- New Node",
-            "5. Update Head pointer to New Node"                               // Line 8
-        });
-    }
+    // Define the pseudocode for this operation
+    vector<string> code = {
+        "Node* newNode = new Node(val);",
+        "if (!head) head = newNode;",
+        "else { newNode->next = head; head->prev = newNode; }",
+        "head = newNode;"
+    };
 
     DLLNode* newNode = new DLLNode{value, nullptr, nullptr};
-    if (globalApp) {
-        globalApp->recordState("Creating new node...", 1, captureState());
-    }
+
+    // Step 1: Create Node
+    Visualizer::Instance().RecordState("Creating Node " + to_string(value), 0, captureState(), code);
 
     if (head == nullptr) {
         head = tail = newNode;
-        if (globalApp) {
-            globalApp->recordState("List was empty, set Head = NewNode", 2, captureState());
-        }
+        // Step 2: Set Head
+        Visualizer::Instance().RecordState("List Empty: Head = New Node", 1, captureState(), code);
         return;
     }
-    if (globalApp) globalApp->recordState("Linking Next...", 4, captureState());
-    newNode->next = head;
-    if (globalApp) globalApp->recordState("Linking Prev...", 5, captureState());
-    head->prev = newNode;
-    if (globalApp) globalApp->recordState("Updating Head...", 6, captureState());
-    head = newNode;
 
+    // Step 3: Link
+    newNode->next = head;
+    head->prev = newNode;
+    Visualizer::Instance().RecordState("Linking New Node -> Old Head", 2, captureState(), code);
+
+    // Step 4: Update Head
+    head = newNode;
+    Visualizer::Instance().RecordState("Updating Head Pointer", 3, captureState(), code);
 }
 
 void DoublyLinkedList::addTail(int value) {
+    vector<string> code = {
+        "Node* newNode = new Node(val);",
+        "if (!head) head = newNode;",
+        "else { tail->next = newNode; newNode->prev = tail; }",
+        "tail = newNode;"
+    };
+
     DLLNode* newNode = new DLLNode{value, nullptr, nullptr};
+
+    // Step 1: Create
+    Visualizer::Instance().RecordState("Creating Node " + to_string(value), 0, captureState(), code);
+
     if (head == nullptr) {
         head = tail = newNode;
-        if (globalApp) {
-            globalApp->recordState("Initialized Tail", 1, captureState());
-        }
+        Visualizer::Instance().RecordState("List Empty: Head = New Node", 1, captureState(), code);
         return;
     }
+
+    // Step 2: Link
     tail->next = newNode;
     newNode->prev = tail;
-    tail = newNode;
+    Visualizer::Instance().RecordState("Linking Old Tail -> New Node", 2, captureState(), code);
 
-    if (globalApp) {
-        globalApp->recordState("Added node to Tail", 2, captureState());
-    }
+    // Step 3: Update Tail
+    tail = newNode;
+    Visualizer::Instance().RecordState("Updating Tail Pointer", 3, captureState(), code);
 }
 
 void DoublyLinkedList::deleteNode(int value) {
-    // 1. SETUP CODE BOX (Fixing the missing code text)
-    if (globalApp) {
-        globalApp->setCodeLines({
-            "void deleteNode(int value) {",       // 0
-            "   Node* current = head;",           // 1
-            "   while(curr && curr->data != v)",  // 2
-            "   // Found: Re-wire pointers",      // 3
-            "   curr->prev->next = curr->next;",  // 4
-            "   curr->next->prev = curr->prev;",  // 5
-            "   delete current;",                 // 6
-            "}"
-        });
-    }
+    vector<string> code = {
+        "Node* curr = head;",
+        "while (curr && curr->data != val) curr = curr->next;",
+        "if (curr) { unlink(curr); delete curr; }"
+    };
 
-    if (head == nullptr) return;
+    if (!head) return;
 
     DLLNode* current = head;
     int index = 0;
 
-    // --- SEARCH ANIMATION ---
+    // Search Animation
     while (current != nullptr && current->data != value) {
-        if (globalApp) {
-            vector<VisualNode> frame = captureState();
-            frame[index].color = HIGHLIGHT_COLOR; // Orange
-            globalApp->recordState("Searching for " + to_string(value) + "...", 2, frame);
-        }
+        vector<VisualNode> frame = captureState();
+        frame[index].color = ORANGE; // Highlight searching
+        Visualizer::Instance().RecordState("Searching for " + to_string(value), 1, frame, code);
+
         current = current->next;
         index++;
     }
 
-    if (current == nullptr) {
-        if (globalApp) globalApp->recordState("Value not found.", 2, captureState());
+    if (!current) {
+        Visualizer::Instance().RecordState("Value not found.", 1, captureState(), code);
         return;
     }
 
-    // --- MARK TARGET ---
-    if (globalApp) {
-        vector<VisualNode> frame = captureState();
-        frame[index].color = RED; // Show Red before deleting
-        globalApp->recordState("Found target node!", 3, frame);
-    }
+    // Found Animation
+    vector<VisualNode> frame = captureState();
+    frame[index].color = RED; // Mark for deletion
+    Visualizer::Instance().RecordState("Found target node", 2, frame, code);
 
-    // --- LOGIC: RE-WIRE ---
+    // Unlink Logic
     if (current == head) {
         head = head->next;
         if (head) head->prev = nullptr;
@@ -164,50 +180,22 @@ void DoublyLinkedList::deleteNode(int value) {
         current->next->prev = current->prev;
     }
 
-    DLLNode* toDelete = current;
+    // Show "Rewiring" (Ghost Node)
+    // We manually add the red node back to the visual frame because it's detached
+    vector<VisualNode> rewiredFrame = captureState();
+    VisualNode ghost;
+    ghost.id = -1;
+    ghost.data = current->data;
+    ghost.x = 100 + index * 120;
+    ghost.y = 300;
+    ghost.color = RED;
+    ghost.nextNodeIndex = -1;
+    rewiredFrame.push_back(ghost);
 
-    // --- FIX: MANUAL GHOST NODE ---
-    // At this point, 'captureState()' will MISS the deleted node because pointers bypass it.
-    // We must manually add it back so the user sees the "Bypass" step.
-    if (globalApp) {
-        vector<VisualNode> frame = captureState(); // Captures the NEW list (without node)
+    Visualizer::Instance().RecordState("Re-wired pointers", 2, rewiredFrame, code);
 
-        // Create the "Ghost" node
-        VisualNode ghost;
-        ghost.id = -1;
-        ghost.data = toDelete->data;
-        ghost.x = 100 + index * 120; // Use the old index position
-        ghost.y = 300; // Same Y
-        ghost.color = RED;
-        ghost.nextNodeIndex = -1; // Disconnected
-        ghost.prevNodeIndex = -1;
+    delete current;
 
-        // Add it to the frame
-        frame.push_back(ghost);
-
-        globalApp->recordState("Re-wired pointers to bypass node", 4, frame);
-    }
-
-    // --- CLEANUP ---
-    delete toDelete;
-
-    if (globalApp) {
-        globalApp->recordState("Node deleted and memory freed", 6, captureState());
-    }
-}
-
-void DoublyLinkedList::searchNode(int value) {
-
-}
-
-DoublyLinkedList::~DoublyLinkedList() {
-    // We need to delete all nodes to prevent memory leaks
-    DLLNode* current = head;
-    while (current != nullptr) {
-        DLLNode* next = current->next;
-        delete current;
-        current = next;
-    }
-    head = nullptr;
-    tail = nullptr;
+    // Final State
+    Visualizer::Instance().RecordState("Memory freed", 2, captureState(), code);
 }

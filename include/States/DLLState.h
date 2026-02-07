@@ -1,8 +1,34 @@
-//
-// Created by ADMIN on 2/7/2026.
-//
+#pragma once
+#include "State.h"
+#include "../DataStructures/DoublyLinkedList.h"
 
-#ifndef CS163_DATAVIS_DLLSTATE_H
-#define CS163_DATAVIS_DLLSTATE_H
+class DLLState : public State {
+private:
+    DoublyLinkedList dll;
 
-#endif //CS163_DATAVIS_DLLSTATE_H
+    // UI State
+    bool showCreateMenu = false;
+    bool showInsertMenu = false;
+    bool showDeleteMenu = false;
+
+    // Input
+    bool isInputActive = false;
+    char inputBuffer[64] = {0};
+
+    float playbackSpeed = 0.5f;
+
+    // Helpers
+    void DrawToolbar();
+    void DrawCreateMenu(float x, float y); // <-- NEW
+    void DrawInsertMenu(float x, float y);
+    void DrawDeleteMenu(float x, float y);
+
+    void DrawPseudocode(); // <-- NEW
+    void DrawPlayback();   // <-- NEW
+
+public:
+    DLLState();
+    void Init() override;
+    void Update() override;
+    void Draw() override;
+};

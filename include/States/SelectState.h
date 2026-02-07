@@ -1,8 +1,9 @@
-//
-// Created by ADMIN on 2/7/2026.
-//
+#pragma once
+#include "State.h"
 
-#ifndef CS163_DATAVIS_SELECTSTATE_H
-#define CS163_DATAVIS_SELECTSTATE_H
-
-#endif //CS163_DATAVIS_SELECTSTATE_H
+class SelectState : public State {
+public:
+    void Init() override;
+    void Update() override;
+    void Draw() override;
+};

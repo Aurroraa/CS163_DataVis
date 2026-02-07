@@ -1,6 +1,6 @@
 #pragma once
 #include "VisualNode.h"
-#include "Visualizer.h"
+#include "../Visualizer.h"
 #include "Global.h"
 #include <vector>
 #include <string>

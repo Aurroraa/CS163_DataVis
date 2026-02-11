@@ -1,12 +1,11 @@
 #include "../../include/DataStructures/DoublyLinkedList.h"
-#include "../../include/Visualizer.h" // Access the Singleton
+#include "../../include/Visualizer.h"
 #include <string>
 #include <vector>
 
-using namespace std;
-
-// REMOVED: extern Visualizer* globalApp;  <-- This was causing the error!
-
+// ---------------------------------------------------------
+// CONSTRUCTOR & DESTRUCTOR (MISSING PART)
+// ---------------------------------------------------------
 DoublyLinkedList::DoublyLinkedList() {
     head = nullptr;
     tail = nullptr;
@@ -23,22 +22,52 @@ DoublyLinkedList::~DoublyLinkedList() {
     tail = nullptr;
 }
 
-// Helper to capture the current state of the list for the animation
-vector<VisualNode> DoublyLinkedList::captureState() {
-    vector<VisualNode> visuals;
+// ---------------------------------------------------------
+// HELPER: Count Nodes
+// ---------------------------------------------------------
+int DoublyLinkedList::getCount() {
+    int count = 0;
+    DLLNode* curr = head;
+    while (curr) { count++; curr = curr->next; }
+    return count;
+}
+
+// ---------------------------------------------------------
+// 1. CAPTURE STATE (Single Line Layout)
+// ---------------------------------------------------------
+std::vector<VisualNode> DoublyLinkedList::captureState() {
+    std::vector<VisualNode> visuals;
     DLLNode* current = head;
     int index = 0;
+    int totalNodes = getCount();
+
+    // 1. CONFIGURATION
+    int spacing = 100;          // Standard spacing
+    int nodeRadius = 30;
+
+    // Safety: If screen is small, shrink spacing
+    if (GetScreenWidth() < (totalNodes * spacing) + 100) {
+        spacing = (GetScreenWidth() - 100) / (totalNodes > 0 ? totalNodes : 1);
+        if (spacing < 65) spacing = 65; // Don't let them overlap too much
+    }
+
+    // 2. CENTER THE LIST
+    // Calculate total width of the list
+    int totalWidth = (totalNodes - 1) * spacing;
+    // Find the starting X that centers this width on screen
+    int startX = (GetScreenWidth() - totalWidth) / 2;
+    int fixedY = GetScreenHeight() / 2 - 50; // Center vertically
 
     while (current != nullptr) {
         VisualNode v;
         v.id = index;
         v.data = current->data;
-        // Simple positioning: Start at x=100, space them out by 120px
-        v.x = 100 + index * 120;
-        v.y = 300;
-        v.color = BLUE; // Default color
+        v.color = BLUE;
 
-        // Link logic for the renderer
+        // 3. POSITIONING
+        v.x = startX + (index * spacing);
+        v.y = fixedY;
+
         v.nextNodeIndex = (current->next != nullptr) ? index + 1 : -1;
         v.prevNodeIndex = (current->prev != nullptr) ? index - 1 : -1;
 
@@ -49,8 +78,11 @@ vector<VisualNode> DoublyLinkedList::captureState() {
     return visuals;
 }
 
-void DoublyLinkedList::init(vector<int> values) {
-    // 1. Clear old memory if any
+// ---------------------------------------------------------
+// 2. INIT (With Limit Check)
+// ---------------------------------------------------------
+void DoublyLinkedList::init(std::vector<int> values) {
+    // Clear old list
     DLLNode* current = head;
     while (current != nullptr) {
         DLLNode* next = current->next;
@@ -59,7 +91,11 @@ void DoublyLinkedList::init(vector<int> values) {
     }
     head = tail = nullptr;
 
-    // 2. Build new list
+    // Limit input to 15
+    if (values.size() > 15) {
+        values.resize(15);
+    }
+
     for (int val : values) {
         DLLNode* newNode = new DLLNode{val, nullptr, nullptr};
         if (!head) {
@@ -71,14 +107,19 @@ void DoublyLinkedList::init(vector<int> values) {
         }
     }
 
-    // 3. Record the initial state
-    // We pass empty code lines {} because this isn't an algorithm step
-    Visualizer::Instance().RecordState("Initialized List", 0, captureState(), {});
+    Visualizer::Instance().RecordState("Initialized List (Max 15)", 0, captureState(), {});
 }
 
+// ---------------------------------------------------------
+// 3. ADD HEAD
+// ---------------------------------------------------------
 void DoublyLinkedList::addHead(int value) {
-    // Define the pseudocode for this operation
-    vector<string> code = {
+    if (getCount() >= 15) {
+        Visualizer::Instance().RecordState("Error: Max 15 nodes allowed!", 0, captureState(), {});
+        return;
+    }
+
+    std::vector<std::string> code = {
         "Node* newNode = new Node(val);",
         "if (!head) head = newNode;",
         "else { newNode->next = head; head->prev = newNode; }",
@@ -86,29 +127,32 @@ void DoublyLinkedList::addHead(int value) {
     };
 
     DLLNode* newNode = new DLLNode{value, nullptr, nullptr};
-
-    // Step 1: Create Node
-    Visualizer::Instance().RecordState("Creating Node " + to_string(value), 0, captureState(), code);
+    Visualizer::Instance().RecordState("Creating Node " + std::to_string(value), 0, captureState(), code);
 
     if (head == nullptr) {
         head = tail = newNode;
-        // Step 2: Set Head
         Visualizer::Instance().RecordState("List Empty: Head = New Node", 1, captureState(), code);
         return;
     }
 
-    // Step 3: Link
     newNode->next = head;
     head->prev = newNode;
     Visualizer::Instance().RecordState("Linking New Node -> Old Head", 2, captureState(), code);
 
-    // Step 4: Update Head
     head = newNode;
     Visualizer::Instance().RecordState("Updating Head Pointer", 3, captureState(), code);
 }
 
+// ---------------------------------------------------------
+// 4. ADD TAIL
+// ---------------------------------------------------------
 void DoublyLinkedList::addTail(int value) {
-    vector<string> code = {
+    if (getCount() >= 15) {
+        Visualizer::Instance().RecordState("Error: Max 15 nodes allowed!", 0, captureState(), {});
+        return;
+    }
+
+    std::vector<std::string> code = {
         "Node* newNode = new Node(val);",
         "if (!head) head = newNode;",
         "else { tail->next = newNode; newNode->prev = tail; }",
@@ -116,9 +160,7 @@ void DoublyLinkedList::addTail(int value) {
     };
 
     DLLNode* newNode = new DLLNode{value, nullptr, nullptr};
-
-    // Step 1: Create
-    Visualizer::Instance().RecordState("Creating Node " + to_string(value), 0, captureState(), code);
+    Visualizer::Instance().RecordState("Creating Node " + std::to_string(value), 0, captureState(), code);
 
     if (head == nullptr) {
         head = tail = newNode;
@@ -126,18 +168,19 @@ void DoublyLinkedList::addTail(int value) {
         return;
     }
 
-    // Step 2: Link
     tail->next = newNode;
     newNode->prev = tail;
     Visualizer::Instance().RecordState("Linking Old Tail -> New Node", 2, captureState(), code);
 
-    // Step 3: Update Tail
     tail = newNode;
     Visualizer::Instance().RecordState("Updating Tail Pointer", 3, captureState(), code);
 }
 
+// ---------------------------------------------------------
+// 5. DELETE NODE
+// ---------------------------------------------------------
 void DoublyLinkedList::deleteNode(int value) {
-    vector<string> code = {
+    std::vector<std::string> code = {
         "Node* curr = head;",
         "while (curr && curr->data != val) curr = curr->next;",
         "if (curr) { unlink(curr); delete curr; }"
@@ -148,11 +191,11 @@ void DoublyLinkedList::deleteNode(int value) {
     DLLNode* current = head;
     int index = 0;
 
-    // Search Animation
+    // Search
     while (current != nullptr && current->data != value) {
-        vector<VisualNode> frame = captureState();
-        frame[index].color = ORANGE; // Highlight searching
-        Visualizer::Instance().RecordState("Searching for " + to_string(value), 1, frame, code);
+        std::vector<VisualNode> frame = captureState();
+        if (index < frame.size()) frame[index].color = ORANGE;
+        Visualizer::Instance().RecordState("Searching for " + std::to_string(value), 1, frame, code);
 
         current = current->next;
         index++;
@@ -163,15 +206,16 @@ void DoublyLinkedList::deleteNode(int value) {
         return;
     }
 
-    // Found Animation
-    vector<VisualNode> frame = captureState();
-    frame[index].color = RED; // Mark for deletion
+    // Found
+    std::vector<VisualNode> frame = captureState();
+    if (index < frame.size()) frame[index].color = RED;
     Visualizer::Instance().RecordState("Found target node", 2, frame, code);
 
-    // Unlink Logic
+    // Unlink
     if (current == head) {
         head = head->next;
         if (head) head->prev = nullptr;
+        else tail = nullptr;
     } else if (current == tail) {
         tail = tail->prev;
         if (tail) tail->next = nullptr;
@@ -180,22 +224,6 @@ void DoublyLinkedList::deleteNode(int value) {
         current->next->prev = current->prev;
     }
 
-    // Show "Rewiring" (Ghost Node)
-    // We manually add the red node back to the visual frame because it's detached
-    vector<VisualNode> rewiredFrame = captureState();
-    VisualNode ghost;
-    ghost.id = -1;
-    ghost.data = current->data;
-    ghost.x = 100 + index * 120;
-    ghost.y = 300;
-    ghost.color = RED;
-    ghost.nextNodeIndex = -1;
-    rewiredFrame.push_back(ghost);
-
-    Visualizer::Instance().RecordState("Re-wired pointers", 2, rewiredFrame, code);
-
     delete current;
-
-    // Final State
-    Visualizer::Instance().RecordState("Memory freed", 2, captureState(), code);
+    Visualizer::Instance().RecordState("Node Deleted", 2, captureState(), code);
 }

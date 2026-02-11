@@ -145,7 +145,7 @@ void DLLState::DrawCreateMenu(float x, float y) {
 
         // Safety Limit: Don't crash with 1000 nodes
         if (n < 1) n = 1;
-        if (n > 20) n = 20; // Limit to 20 for screen space
+        if (n > 15) n = 15; // Limit to 20 for screen space
 
         std::vector<int> values;
         for(int i = 0; i < n; i++) {

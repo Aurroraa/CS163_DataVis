@@ -1,10 +1,6 @@
 #pragma once
-#include "VisualNode.h"
-#include "../Visualizer.h"
-#include "Global.h"
 #include <vector>
-#include <string>
-using namespace std;
+#include "../Global.h"
 
 struct DLLNode {
     int data;
@@ -16,15 +12,19 @@ class DoublyLinkedList {
 private:
     DLLNode* head;
     DLLNode* tail;
-    vector<VisualNode> captureState();
+
+    // Helper to position nodes for drawing
+    std::vector<VisualNode> captureState();
+
+    // NEW Helper
+    int getCount();
+
 public:
     DoublyLinkedList();
     ~DoublyLinkedList();
-    void init(vector<int> values);
+
+    void init(std::vector<int> values);
     void addHead(int value);
     void addTail(int value);
     void deleteNode(int value);
-    void searchNode(int value);
-
-    void setRecord(Visualizer* Vis);
 };

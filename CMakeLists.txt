@@ -38,6 +38,12 @@ add_executable(CS163_DataVis
         src/Renderers/DLLRenderer.cpp
         src/tinyfiledialogs.c
         include/tinyfiledialogs.h
+        src/DataStructures/MinHeap.cpp
+        src/Renderers/MinHeapRenderer.cpp
+        src/States/MinHeapState.cpp
+        include/DataStructures/MinHeap.h
+        include/Renderers/MinHeapRenderer.h
+        include/States/MinHeapState.h
 )
 
 # --- 3. Link Raylib to your app ---

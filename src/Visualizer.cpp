@@ -66,7 +66,7 @@ void Visualizer::DrawCanvas() {
     const AnimationState& state = history[currentStep];
 
     // Delegate to Renderer
-    DLLRenderer::Draw(state);
+    // DLLRenderer::Draw(state);
 
     // Draw Step Counter
     DrawText(TextFormat("Step: %d / %d", currentStep + 1, history.size()),

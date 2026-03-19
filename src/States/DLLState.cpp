@@ -10,6 +10,8 @@
 #include <vector>
 #include <string>
 
+#include "Renderers/DLLRenderer.h"
+
 DLLState::DLLState() {
     dll.init({10, 20, 30});
     playbackSpeed = 0.5f; // Initialize default speed
@@ -38,6 +40,7 @@ void DLLState::Draw() {
         g_App->ChangeState(new SelectState());
     }
 
+    DLLRenderer::Draw(Visualizer::Instance().GetCurrentState());
     // 3. UI Components
     DrawToolbar();
     DrawPlayback();

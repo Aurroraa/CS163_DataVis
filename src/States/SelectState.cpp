@@ -1,6 +1,7 @@
 #include "../../include/States/SelectState.h"
 #include "../../include/States/MenuState.h"
-#include "../../include/States/DLLState.h" // We will create this next!
+#include "../../include/States/DLLState.h"
+#include "States/MinHeapState.h"
 #include "../../include/App.h"
 #include "../../include/raygui.h"
 
@@ -32,8 +33,11 @@ void SelectState::Draw() {
         g_App->ChangeState(new DLLState());
     }
 
-    // Placeholder for others
-    GuiSetState(STATE_DISABLED);
-    GuiButton((Rectangle){(float)startX + 300, (float)startY, (float)btnWidth, (float)btnHeight}, "Heap (Coming Soon)");
-    GuiSetState(STATE_NORMAL);
+    if (GuiButton((Rectangle){ 50, 180, 250, 40 }, "Min Heap")) {
+        g_App->ChangeState(new MinHeapState()); // Loads the Heap Screen!
+    }
+
+    if (GuiButton((Rectangle){ 50, 300, 100, 40 }, "Back to Menu")) {
+        g_App->ChangeState(new MenuState());
+    }
 }

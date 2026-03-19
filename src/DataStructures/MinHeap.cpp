@@ -20,7 +20,7 @@ std::vector<VisualNode> MinHeap::captureState(int h1, int h2, Color highlightCol
 
         int depth = (i == 0) ? 0 : floor(log2(i + 1));
         int posInLevel = (i + 1) - pow(2, depth);
-        int horizontalSpacing = SCREEN_WIDTH / (pow(2, depth) + 1);
+        int horizontalSpacing = GetScreenWidth() / (pow(2, depth) + 1);
 
         v.x = horizontalSpacing * (posInLevel + 1);
         v.y = startY + depth * 90;

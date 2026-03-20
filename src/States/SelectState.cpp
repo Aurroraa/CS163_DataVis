@@ -33,11 +33,8 @@ void SelectState::Draw() {
         g_App->ChangeState(new DLLState());
     }
 
-    if (GuiButton((Rectangle){ 50, 180, 250, 40 }, "Min Heap")) {
+    if (GuiButton((Rectangle){ (float)startX + btnWidth + 50, (float)startY, (float)btnWidth, (float)btnHeight }, "Min Heap")) {
         g_App->ChangeState(new MinHeapState()); // Loads the Heap Screen!
     }
 
-    if (GuiButton((Rectangle){ 50, 300, 100, 40 }, "Back to Menu")) {
-        g_App->ChangeState(new MenuState());
-    }
 }

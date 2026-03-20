@@ -18,9 +18,15 @@ void MinHeapRenderer::Draw(const AnimationState &state) {
         }
     }
 
+    int maxAllowedWidth = GetScreenWidth() - 40;
     int boxSize = 55;
+
+    if (state.nodes.size() * boxSize > maxAllowedWidth) {
+        boxSize = maxAllowedWidth/state.nodes.size();
+    }
+
     int tableStartX = (GetScreenWidth() - (state.nodes.size() * boxSize)) / 2;
-    int tableY = GetScreenHeight() - 150;
+    int tableY = GetScreenHeight() - 340;
 
     for (const auto &node : state.nodes) {
         string text = to_string(node.data);

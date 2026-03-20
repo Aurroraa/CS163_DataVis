@@ -48,6 +48,9 @@ void MinHeap::init(std::vector<int> values) {
 
 
 void MinHeap::insert(int value) {
+    if (data.size() >= 31) {
+        Visualizer::Instance().RecordState("Error: Heap Full (Max 31 nodes)", 0, captureState(), {});
+    }
     data.push_back(value);
 
     vector<string> code = {"heap.push_back(val)", "heapifyUp(size - 1)"};

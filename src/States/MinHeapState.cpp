@@ -15,6 +15,8 @@ MinHeapState::MinHeapState() {
     Visualizer::Instance().ClearHistory();
     heap.init({10, 20, 15, 40, 50, 100, 25});
     playbackSpeed = 0.5f;
+
+    Visualizer::Instance().GoToEnd();
 }
 
 
@@ -113,7 +115,7 @@ void MinHeapState::DrawCreateMenu(float x, float y) {
 
         if (!values.empty()) heap.init(values);
 
-        Visualizer::Instance().SetStep(0);
+        Visualizer::Instance().GoToEnd();
         Visualizer::Instance().SetPlaying(false);
     }
 
@@ -146,7 +148,7 @@ void MinHeapState::DrawCreateMenu(float x, float y) {
 
         heap.init(values);
 
-        Visualizer::Instance().SetStep(0);
+        Visualizer::Instance().GoToEnd();
         Visualizer::Instance().SetPlaying(false);
     }
 

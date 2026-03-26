@@ -44,6 +44,12 @@ add_executable(CS163_DataVis
         include/DataStructures/MinHeap.h
         include/Renderers/MinHeapRenderer.h
         include/States/MinHeapState.h
+        include/DataStructures/AVLTree.h
+        include/Renderers/AVLRenderer.h
+        include/States/AVLState.h
+        src/DataStructures/AVLTree.cpp
+        src/Renderers/AVLRenderer.cpp
+        src/States/AVLState.cpp
 )
 
 # --- 3. Link Raylib to your app ---

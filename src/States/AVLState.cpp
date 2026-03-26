@@ -1,5 +1,5 @@
-#include "States/MinHeapState.h"
-#include "Renderers/MinHeapRenderer.h"
+#include "States/AVLState.h"
+#include "Renderers/AVLRenderer.h"
 #include "States/SelectState.h"
 #include "Visualizer.h"
 #include "App.h"
@@ -11,16 +11,15 @@
 #include <vector>
 #include <string>
 
-MinHeapState::MinHeapState() {
+AVLState::AVLState() {
     Visualizer::Instance().ClearHistory();
-    heap.init({10, 20, 15, 40, 50, 100, 25});
+    avl.init({10, 20, 15, 30, 50, 100, 25});
     playbackSpeed = 0.5f;
 
     Visualizer::Instance().GoToEnd();
 }
 
-
-void MinHeapState::Init() {
+void AVLState::Init() {
     showCreateMenu = false;
     showInsertMenu = false;
     showDeleteMenu = false;
@@ -28,24 +27,24 @@ void MinHeapState::Init() {
     Visualizer::Instance().SetSpeed(playbackSpeed);
 }
 
-void MinHeapState::Update() {
+void AVLState::Update() {
     Visualizer::Instance().Update();
 }
 
-void MinHeapState::Draw() {
+void AVLState::Draw() {
     DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight() - 200, RAYWHITE);
     Visualizer::Instance().DrawCanvas();
     if (GuiButton((Rectangle){(float)GetScreenWidth() - 100, 10, 80, 30}, "Home")) {
         g_App->ChangeState(new SelectState());
     }
-    MinHeapRenderer::Draw(Visualizer::Instance().GetCurrentState());
+    AVLRenderer::Draw(Visualizer::Instance().GetCurrentState());
 
     DrawToolbar();
     DrawPlayback();
     DrawPseudocode();
 }
 
-void MinHeapState::DrawToolbar() {
+void AVLState::DrawToolbar() {
     float startY = GetScreenHeight() - 200;
     DrawRectangle(0, startY, GetScreenWidth(), 200, LIGHTGRAY);
     DrawLine(0, startY, GetScreenWidth(), startY, DARKGRAY);
@@ -80,7 +79,7 @@ void MinHeapState::DrawToolbar() {
 
         // 2. Reset the Data Structure to empty
         // Passing an empty vector {} creates a blank list
-        heap.init({});
+        avl.init({});
 
         // 3. Reset UI state
         showCreateMenu = false;
@@ -96,7 +95,7 @@ void MinHeapState::DrawToolbar() {
 }
 
 
-void MinHeapState::DrawCreateMenu(float x, float y) {
+void AVLState::DrawCreateMenu(float x, float y) {
     DrawText("Values", x, y + 5, 20, BLACK);
 
     if (GuiTextBox((Rectangle){x + 210, y, 100, 30}, inputBuffer, 64, isInputActive)) {
@@ -113,7 +112,7 @@ void MinHeapState::DrawCreateMenu(float x, float y) {
             try { values.push_back(std::stoi(segment)); } catch(...) {}
         }
 
-        if (!values.empty()) heap.init(values);
+        if (!values.empty()) avl.init(values);
 
         Visualizer::Instance().GoToEnd();
         Visualizer::Instance().SetPlaying(false);
@@ -139,14 +138,14 @@ void MinHeapState::DrawCreateMenu(float x, float y) {
 
         // Safety Limit: Don't crash with 1000 nodes
         if (n < 1) n = 1;
-        if (n > 31) n = 31; // Limit to 20 for screen space
+        if (n > 50) n = 50; // Limit to 50 for screen space
 
         std::vector<int> values;
         for(int i = 0; i < n; i++) {
             values.push_back(GetRandomValue(1, 99));
         }
 
-        heap.init(values);
+        avl.init(values);
 
         Visualizer::Instance().GoToEnd();
         Visualizer::Instance().SetPlaying(false);
@@ -189,36 +188,36 @@ void MinHeapState::DrawCreateMenu(float x, float y) {
 
                 // Initialize the list if we found data
                 if (!values.empty()) {
-                    heap.init(values);
+                    avl.init(values);
                 }
             }
         }
     }
 }
 
-void MinHeapState::DrawInsertMenu(float x, float y) {
+void AVLState::DrawInsertMenu(float x, float y) {
     DrawText("Values", x, y + 5, 20, BLACK);
     if (GuiTextBox((Rectangle){x + 60, y, 80, 30}, inputBuffer, 64, isInputActive)) {
         isInputActive = !isInputActive;
     }
     if (GuiButton((Rectangle){x, y + 40, 60, 30}, "Insert")) {
         int startStep = Visualizer::Instance().GetTotalSteps();
-        heap.insert(atoi(inputBuffer));
+        avl.insert(atoi(inputBuffer));
         Visualizer::Instance().SetStep(startStep);
         Visualizer::Instance().SetPlaying(true);
     }
 }
 
-void MinHeapState::DrawDeleteMenu(float x, float y) {
+void AVLState::DrawDeleteMenu(float x, float y) {
     if (GuiButton((Rectangle){x, y + 40, 100, 30}, "Delete Root")) {
         int startStep = Visualizer::Instance().GetTotalSteps();
-        heap.extractMin();
+        //avl.extractMin();
         Visualizer::Instance().SetStep(startStep);
         Visualizer::Instance().SetPlaying(true);
     }
 }
 
-void MinHeapState::DrawPlayback() {
+void AVLState::DrawPlayback() {
     int centerX = GetScreenWidth() / 2;
     int y = GetScreenHeight() - 240;
 
@@ -247,7 +246,7 @@ void MinHeapState::DrawPlayback() {
     Visualizer::Instance().SetSpeed(playbackSpeed);
 }
 
-void MinHeapState::DrawPseudocode() {
+void AVLState::DrawPseudocode() {
     int panelW = 400;
     int panelH = 200;
     int startX = GetScreenWidth() - panelW;

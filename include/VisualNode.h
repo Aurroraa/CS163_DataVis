@@ -3,6 +3,7 @@
 struct VisualNode {
     int id;             // Unique ID to track movement
     int data;
+    int highlightIndex;
     float x, y;         // Screen position
     Color color;        // Current color (Blue=Normal, Orange=Highlight)
 

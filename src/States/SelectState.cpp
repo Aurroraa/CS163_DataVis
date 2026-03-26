@@ -1,9 +1,11 @@
 #include "../../include/States/SelectState.h"
 #include "../../include/States/MenuState.h"
 #include "../../include/States/DLLState.h"
+#include "../../include/States/AVLState.h"
 #include "States/MinHeapState.h"
 #include "../../include/App.h"
 #include "../../include/raygui.h"
+#include "DataStructures/AVLTree.h"
 
 void SelectState::Init() {
     // Load specific assets if needed
@@ -37,4 +39,7 @@ void SelectState::Draw() {
         g_App->ChangeState(new MinHeapState()); // Loads the Heap Screen!
     }
 
+    if (GuiButton((Rectangle){(float)startX + btnWidth * 2 + 100, (float)startY, (float)btnWidth, (float)btnHeight}, "AVL Tree")) {
+        g_App->ChangeState(new AVLState());
+    }
 }

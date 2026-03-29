@@ -12,6 +12,12 @@ Trie::Trie() {
 
 Trie::~Trie() {clear();}
 
+void Trie::clear() {
+    destroyTree(root);
+    root = new TrieNode(0, 0, -1);
+    nextNodeID = 1;
+}
+
 void Trie::destroyTree(TrieNode *node) {
     if (!node) return;
     for (int i = 0; i < 26; i++) {
@@ -38,13 +44,13 @@ void Trie::calcPositions(TrieNode *node, int depth) {
     }
     if (isLeaf) {
         node->x = currentX;
-        currentX += 70.0f;
+        currentX += 95.0f;
     }
     else {
         node->x = sumX / childCound;
-        currentX = max(currentX, node->x + 70.f);
+        currentX = max(currentX, node->x + 95.f);
     }
-    node->y = 120.0f + depth * 80.0f;
+    node->y = 100.0f + depth * 80.0f;
 }
 
 void Trie::collectVisualNodes(TrieNode *node, std::vector<VisualNode> &visuals, int highlightId, Color c, float shiftX) {
@@ -116,7 +122,8 @@ void Trie::insert(std::string word) {
     }
 
     curr -> isEndOfWord = true;
-    Visualizer::Instance().RecordState("Marking '" + string(1, cleanWord.back()) + "' as End of Word", 5, captureState(curr->id, PURPLE), code );
+    Visualizer::Instance().RecordState("Marking '" + string(1, cleanWord.back()) + "' as End of Word", 5, captureState(curr->id, PURPLE), code );Visualizer::Instance().RecordState("Insertion complete.", -1, captureState(-1, BLUE), code);
+
 }
 
 void Trie::searchWord(std::string word) {

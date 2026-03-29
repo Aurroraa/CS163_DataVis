@@ -1,8 +1,49 @@
-//
-// Created by ADMIN on 3/29/2026.
-//
+#pragma once
+#include "State.h"
+#include "../DataStructures/Trie.h"
 
-#ifndef CS163_DATAVIS_TRIESTATE_H
-#define CS163_DATAVIS_TRIESTATE_H
+class TrieState : public State {
+private:
+    Trie trie;
 
-#endif //CS163_DATAVIS_TRIESTATE_H
+    // The 5 Main Menu Flags
+    bool showInitMenu = false;
+    bool showAddMenu = false;
+    bool showDeleteMenu = false;
+    bool showUpdateMenu = false;
+    bool showSearchMenu = false;
+
+    // Inputs
+    bool isInputActive = false;
+    char inputBuffer[64] = {0}; // Used for Value / New Value
+
+    bool isOldActive = false;
+    char oldBuffer[64] = {0};   // Used for Old Value in Update
+
+    bool nInputActive = false;
+    char nBuffer[16] = "5";
+
+    bool isSizeActive = false;
+    char sizeBuffer[64] = {0};
+
+    float playbackSpeed = 0.5f;
+
+    // The Bottom Toolbar
+    void DrawToolbar();
+
+    // Flattened Popup Screens
+    void DrawInitMenu(float x, float y);
+    void DrawAddMenu(float x, float y);
+    void DrawDeleteMenu(float x, float y);
+    void DrawUpdateMenu(float x, float y);
+    void DrawSearchMenu(float x, float y);
+
+    void DrawPseudocode();
+    void DrawPlayback();
+
+public:
+    TrieState();
+    void Init() override;
+    void Update() override;
+    void Draw() override;
+};

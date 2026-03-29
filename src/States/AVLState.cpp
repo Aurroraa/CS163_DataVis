@@ -111,7 +111,7 @@ void AVLState::DrawInitMenu(float x, float y) {
     if (GuiTextBox((Rectangle){x + 190, y + 10, 150, 30}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
 
     // Trigger on Button OR Enter Key
-    if (GuiButton((Rectangle){x + 350, y + 10, 40, 30}, "Go") || (isInputActive && IsKeyPressed(KEY_ENTER))) {
+    if (GuiButton((Rectangle){x + 350, y + 10, 40, 30}, "Go") || (IsKeyPressed(KEY_ENTER))) {
         if (inputBuffer[0] != '\0') {
             Visualizer::Instance().ClearHistory();
             std::vector<int> values;
@@ -134,7 +134,7 @@ void AVLState::DrawInitMenu(float x, float y) {
     if (GuiTextBox((Rectangle){x + 130, y + 60, 50, 30}, nBuffer, 16, nInputActive)) nInputActive = !nInputActive;
 
     // Trigger on Button OR Enter Key
-    if (GuiButton((Rectangle){x + 190, y + 60, 90, 30}, "Generate") || (nInputActive && IsKeyPressed(KEY_ENTER))) {
+    if (GuiButton((Rectangle){x + 190, y + 60, 90, 30}, "Generate") || (IsKeyPressed(KEY_ENTER))) {
         Visualizer::Instance().ClearHistory();
         int n = atoi(nBuffer);
         if (n < 1) n = 1; if (n > 31) n = 31;

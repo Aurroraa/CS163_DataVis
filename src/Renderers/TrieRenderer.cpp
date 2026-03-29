@@ -29,11 +29,12 @@ namespace TrieRenderer {
             }
 
             string text;
-            if (node.data == 0) text = "ROOT";
-            else text = string(1, (char)node.data);
+            int fontSize = 20;
+            if (node.data == 0) text = "ROOT", fontSize = 14;
+            else text = string(1, (char)node.data), fontSize = 24;
 
-            int textWidth = MeasureText(text.c_str(), 20);
-            DrawText(text.c_str(), node.drawX - textWidth/2, node.drawY - 10, 20, WHITE);
+            int textWidth = MeasureText(text.c_str(), fontSize);
+            DrawText(text.c_str(), node.drawX - textWidth/2, node.drawY - fontSize/2, fontSize, WHITE);
         }
 
         DrawText(state.message.c_str(), 20, 20, 25, BLACK);

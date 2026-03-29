@@ -2,6 +2,7 @@
 #include "../../include/States/MenuState.h"
 #include "../../include/States/DLLState.h"
 #include "../../include/States/AVLState.h"
+#include "../../include/States/TrieState.h"
 #include "States/MinHeapState.h"
 #include "../../include/App.h"
 #include "../../include/raygui.h"
@@ -41,5 +42,8 @@ void SelectState::Draw() {
 
     if (GuiButton((Rectangle){(float)startX + btnWidth * 2 + 100, (float)startY, (float)btnWidth, (float)btnHeight}, "AVL Tree")) {
         g_App->ChangeState(new AVLState());
+    }
+    if (GuiButton((Rectangle){(float)startX + btnWidth/2.0f, (float)startY + btnHeight + 100, (float)btnWidth, (float)btnHeight}, "Trie")) {
+        g_App->ChangeState(new TrieState());
     }
 }

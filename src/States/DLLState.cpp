@@ -110,7 +110,7 @@ void DLLState::DrawInitMenu(float x, float y) {
 
     DrawText("A =", x + 150, y + 15, 20, BLACK);
     if (GuiTextBox((Rectangle){x + 190, y + 10, 150, 30}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
-    if (GuiButton((Rectangle){x + 350, y + 10, 40, 30}, "Go") || (isInputActive && IsKeyPressed(KEY_ENTER))) {
+    if (GuiButton((Rectangle){x + 350, y + 10, 40, 30}, "Go") || (IsKeyPressed(KEY_ENTER))) {
         Visualizer::Instance().ClearHistory();
         std::vector<int> values;
         std::stringstream ss(inputBuffer);
@@ -128,7 +128,7 @@ void DLLState::DrawInitMenu(float x, float y) {
     // Row 2: Random & Browse File
     DrawText("Random N =", x + 10, y + 65, 20, BLACK);
     if (GuiTextBox((Rectangle){x + 130, y + 60, 50, 30}, nBuffer, 16, nInputActive)) nInputActive = !nInputActive;
-    if (GuiButton((Rectangle){x + 190, y + 60, 90, 30}, "Generate") || (nInputActive && IsKeyPressed(KEY_ENTER))) {
+    if (GuiButton((Rectangle){x + 190, y + 60, 90, 30}, "Generate") || (IsKeyPressed(KEY_ENTER))) {
         Visualizer::Instance().ClearHistory();
         int n = atoi(nBuffer);
         if (n < 1) n = 1; if (n > 15) n = 15;
@@ -229,7 +229,7 @@ void DLLState::DrawDeleteMenu(float x, float y) {
         locBuffer[0] = '\0';
         isLocActive = false;
     }
-    if (GuiButton((Rectangle){x + 150, y + 70, 90, 30}, "Location")|| (isLocActive && IsKeyPressed(KEY_ENTER))) {
+    if (GuiButton((Rectangle){x + 150, y + 70, 90, 30}, "Location")|| (IsKeyPressed(KEY_ENTER))) {
         int start = Visualizer::Instance().GetTotalSteps();
         dll.deleteAtIndex(atoi(locBuffer));
         Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);
@@ -249,7 +249,7 @@ void DLLState::DrawUpdateMenu(float x, float y) {
     DrawText("New Val:", x + 140, y + 25, 20, BLACK);
     if (GuiTextBox((Rectangle){x + 230, y + 20, 80, 30}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
 
-    if (GuiButton((Rectangle){x + 10, y + 70, 200, 30}, "Update Location") || (isLocActive && isInputActive && IsKeyPressed(KEY_ENTER))) {
+    if (GuiButton((Rectangle){x + 10, y + 70, 200, 30}, "Update Location") || (IsKeyPressed(KEY_ENTER))) {
         int start = Visualizer::Instance().GetTotalSteps();
         dll.updateAtIndex(atoi(locBuffer), atoi(inputBuffer));
         Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);
@@ -267,7 +267,7 @@ void DLLState::DrawSearchMenu(float x, float y) {
     DrawText("Value:", x + 10, y + 25, 20, BLACK);
     if (GuiTextBox((Rectangle){x + 80, y + 20, 80, 30}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
 
-    if (GuiButton((Rectangle){x + 10, y + 70, 180, 30}, "Search Value") || (isInputActive && IsKeyPressed(KEY_ENTER))) {
+    if (GuiButton((Rectangle){x + 10, y + 70, 180, 30}, "Search Value") || (IsKeyPressed(KEY_ENTER))) {
         int start = Visualizer::Instance().GetTotalSteps();
         dll.searchNode(atoi(inputBuffer));
         Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);

@@ -108,7 +108,7 @@ void MinHeapState::DrawInitMenu(float x, float y) {
 
     DrawText("A =", x + 150, y + 15, 20, BLACK);
     if (GuiTextBox((Rectangle){x + 190, y + 10, 150, 30}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
-    if (GuiButton((Rectangle){x + 350, y + 10, 40, 30}, "Go") || (isInputActive && IsKeyPressed(KEY_ENTER))) {
+    if (GuiButton((Rectangle){x + 350, y + 10, 40, 30}, "Go") || (IsKeyPressed(KEY_ENTER))) {
         Visualizer::Instance().ClearHistory();
         std::vector<int> values;
         std::stringstream ss(inputBuffer);
@@ -125,7 +125,7 @@ void MinHeapState::DrawInitMenu(float x, float y) {
     // Row 2
     DrawText("Random N =", x + 10, y + 65, 20, BLACK);
     if (GuiTextBox((Rectangle){x + 130, y + 60, 50, 30}, nBuffer, 16, nInputActive)) nInputActive = !nInputActive;
-    if (GuiButton((Rectangle){x + 190, y + 60, 90, 30}, "Generate") || (nInputActive && IsKeyPressed(KEY_ENTER))) {
+    if (GuiButton((Rectangle){x + 190, y + 60, 90, 30}, "Generate") || (IsKeyPressed(KEY_ENTER))) {
         Visualizer::Instance().ClearHistory();
         int n = atoi(nBuffer);
         if (n < 1) n = 1; if (n > 31) n = 31;
@@ -163,7 +163,7 @@ void MinHeapState::DrawAddMenu(float x, float y) {
     DrawText("Value:", x + 10, y + 25, 20, BLACK);
     if (GuiTextBox((Rectangle){x + 80, y + 20, 80, 30}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
 
-    if (GuiButton((Rectangle){x + 10, y + 70, 150, 30}, "Insert Value") || (isInputActive && IsKeyPressed(KEY_ENTER))) {
+    if (GuiButton((Rectangle){x + 10, y + 70, 150, 30}, "Insert Value") || (IsKeyPressed(KEY_ENTER))) {
         Visualizer::Instance().ClearHistory();
         Visualizer::Instance().RecordState("Initial State", 0, heap.captureState(), {});
         heap.insert(atoi(inputBuffer));
@@ -191,7 +191,7 @@ void MinHeapState::DrawDeleteMenu(float x, float y) {
     DrawText("Pos:", x + 180, y + 25, 20, BLACK);
     if (GuiTextBox((Rectangle){x + 230, y + 20, 60, 30}, locBuffer, 64, isLocActive)) isLocActive = !isLocActive;
 
-    if (GuiButton((Rectangle){x + 180, y + 70, 150, 30}, "Delete at Pos") || (isLocActive && IsKeyPressed(KEY_ENTER))) {
+    if (GuiButton((Rectangle){x + 180, y + 70, 150, 30}, "Delete at Pos") || (IsKeyPressed(KEY_ENTER))) {
         Visualizer::Instance().ClearHistory();
         Visualizer::Instance().RecordState("Initial State", 0, heap.captureState(), {});
         heap.deleteNode(atoi(locBuffer));
@@ -234,7 +234,7 @@ void MinHeapState::DrawSearchMenu(float x, float y) {
     // Search by Value
     DrawText("Val:", x + 10, y + 25, 20, BLACK);
     if (GuiTextBox((Rectangle){x + 50, y + 20, 60, 30}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
-    if (GuiButton((Rectangle){x + 10, y + 70, 100, 30}, "Search Val") || (isInputActive && IsKeyPressed(KEY_ENTER))) {
+    if (GuiButton((Rectangle){x + 10, y + 70, 100, 30}, "Search Val") || (IsKeyPressed(KEY_ENTER))) {
         Visualizer::Instance().ClearHistory();
         Visualizer::Instance().RecordState("Initial State", 0, heap.captureState(), {});
         heap.searchNode(atoi(inputBuffer));
@@ -247,7 +247,7 @@ void MinHeapState::DrawSearchMenu(float x, float y) {
     // Search by Position
     DrawText("Pos:", x + 140, y + 25, 20, BLACK);
     if (GuiTextBox((Rectangle){x + 190, y + 20, 60, 30}, locBuffer, 64, isLocActive)) isLocActive = !isLocActive;
-    if (GuiButton((Rectangle){x + 140, y + 70, 110, 30}, "Search Pos") || (isLocActive && IsKeyPressed(KEY_ENTER))) {
+    if (GuiButton((Rectangle){x + 140, y + 70, 110, 30}, "Search Pos") || (IsKeyPressed(KEY_ENTER))) {
         Visualizer::Instance().ClearHistory();
         Visualizer::Instance().RecordState("Initial State", 0, heap.captureState(), {});
         heap.searchPosition(atoi(locBuffer));

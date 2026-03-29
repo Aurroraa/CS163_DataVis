@@ -1,4 +1,4 @@
-#include "Renderers/MinHeapRenderer.h"
+#include "../../include/Renderers/MinHeapRenderer.h"
 #include "raylib.h"
 #include <string>
 
@@ -18,39 +18,30 @@ void MinHeapRenderer::Draw(const AnimationState &state) {
         }
     }
 
-    int maxAllowedWidth = GetScreenWidth() - 40;
     int boxSize = 55;
-
-    if (state.nodes.size() * boxSize > maxAllowedWidth) {
-        boxSize = maxAllowedWidth/state.nodes.size();
-    }
-
     int tableStartX = (GetScreenWidth() - (state.nodes.size() * boxSize)) / 2;
-    int tableY = GetScreenHeight() - 340;
+    int tableY = GetScreenHeight() - 150;
 
     for (const auto &node : state.nodes) {
         string text = to_string(node.data);
-        string indexText = to_string(node.id);
+        string indexText = to_string(node.highlightIndex); // 🐛 FIX: Use highlightIndex for the Array Index!
 
         //Draw TREE
-        DrawCircle(node.x, node.y, 28, BLACK);
-        DrawCircle(node.x, node.y, 26, node.color);
+        DrawCircle(node.drawX, node.drawY, 28, BLACK);
+        DrawCircle(node.drawX, node.drawY, 26, node.color);
 
         int textWidth = MeasureText(text.c_str(), 20);
-        DrawText(text.c_str(), node.x - textWidth/2, node.y - 10, 20, WHITE);
-
-        DrawText(indexText.c_str(), node.x - 5, node.y - 45, 15, RED);
+        DrawText(text.c_str(), node.drawX - textWidth/2, node.drawY - 10, 20, WHITE);
+        DrawText(indexText.c_str(), node.drawX - 5, node.drawY - 45, 15, RED);
 
         //Draw ARRAY
-
-        int boxX = tableStartX + node.id * boxSize;
+        int boxX = tableStartX + node.highlightIndex * boxSize; // 🐛 FIX: Array placement math
 
         DrawRectangle(boxX, tableY, boxSize, boxSize, node.color);
         DrawRectangleLines(boxX, tableY, boxSize, boxSize, BLACK);
 
         int boxTextWidth = MeasureText(text.c_str(), 20);
         DrawText(text.c_str(), boxX + boxSize/2 - boxTextWidth/2, tableY + 18, 20, WHITE);
-
         DrawText(indexText.c_str(), boxX + 22, tableY + boxSize + 5, 15, RED);
     }
 }

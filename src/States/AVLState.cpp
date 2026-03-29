@@ -1,29 +1,30 @@
-#include "States/AVLState.h"
-#include "Renderers/AVLRenderer.h"
-#include "States/SelectState.h"
-#include "Visualizer.h"
-#include "App.h"
-#include "raygui.h"
+#include "../../include/States/AVLState.h"
+#include "../../include/States/SelectState.h"
+#include "../../include/App.h"
+#include "../../include/raygui.h"
+#include "../../include/Visualizer.h"
+#include "../../include/tinyfiledialogs.h"
+#include "../../include/Renderers/AVLRenderer.h"
 #include <cstdlib>
 #include <sstream>
-#include "../../include/tinyfiledialogs.h"
 #include <fstream>
 #include <vector>
 #include <string>
 
 AVLState::AVLState() {
     Visualizer::Instance().ClearHistory();
-    avl.init({10, 20, 15, 30, 50, 100, 25});
+    avl.init({});
     playbackSpeed = 0.5f;
-
-    Visualizer::Instance().GoToEnd();
 }
 
 void AVLState::Init() {
-    showCreateMenu = false;
-    showInsertMenu = false;
+    showInitMenu = false;
+    showAddMenu = false;
     showDeleteMenu = false;
+    showUpdateMenu = false;
+    showSearchMenu = false;
     inputBuffer[0] = '\0';
+    oldBuffer[0] = '\0';
     Visualizer::Instance().SetSpeed(playbackSpeed);
 }
 
@@ -32,13 +33,19 @@ void AVLState::Update() {
 }
 
 void AVLState::Draw() {
+    // 1. Canvas restored to float above the toolbar
     DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight() - 200, RAYWHITE);
     Visualizer::Instance().DrawCanvas();
+
+    // 2. Navigation
     if (GuiButton((Rectangle){(float)GetScreenWidth() - 100, 10, 80, 30}, "Home")) {
         g_App->ChangeState(new SelectState());
     }
-    AVLRenderer::Draw(Visualizer::Instance().GetCurrentState());
 
+    // 3. Draw Data Structure (Using the smooth animation state!)
+    AVLRenderer::Draw(Visualizer::Instance().GetRenderState());
+
+    // 4. UI Components
     DrawToolbar();
     DrawPlayback();
     DrawPseudocode();
@@ -46,211 +53,235 @@ void AVLState::Draw() {
 
 void AVLState::DrawToolbar() {
     float startY = GetScreenHeight() - 200;
+
     DrawRectangle(0, startY, GetScreenWidth(), 200, LIGHTGRAY);
     DrawLine(0, startY, GetScreenWidth(), startY, DARKGRAY);
 
-    int btnWidth = 100; int gap = 10; int x = 20;
+    int btnWidth = 100;
+    int gap = 10;
+    float x = 20;
 
-    // 1. Button: CREATE
-    if (GuiButton((Rectangle){(float)x, startY + 10, (float)btnWidth, 40}, "Create")) {
-        showCreateMenu = !showCreateMenu;
-        showInsertMenu = false; showDeleteMenu = false;
-    }
-    x += btnWidth + gap;
+    #define CLOSE_ALL_MENUS() showInitMenu = showAddMenu = showDeleteMenu = showUpdateMenu = showSearchMenu = false;
 
-    // 2. Button: INSERT
-    if (GuiButton((Rectangle){(float)x, startY + 10, (float)btnWidth, 40}, "Insert")) {
-        showInsertMenu = !showInsertMenu;
-        showCreateMenu = false; showDeleteMenu = false;
-    }
-    x += btnWidth + gap;
+    // --- THE MAIN BUTTONS ---
+    if (GuiButton((Rectangle){x, startY + 10, (float)btnWidth, 40}, "Init")) {
+        bool wasOpen = showInitMenu; CLOSE_ALL_MENUS(); showInitMenu = !wasOpen;
+    } x += btnWidth + gap;
 
-    // 3. Button: DELETE
-    if (GuiButton((Rectangle){(float)x, startY + 10, (float)btnWidth, 40}, "Delete")) {
-        showDeleteMenu = !showDeleteMenu;
-        showCreateMenu = false; showInsertMenu = false;
-    }
-    x += btnWidth + gap;
+    if (GuiButton((Rectangle){x, startY + 10, (float)btnWidth, 40}, "Add")) {
+        bool wasOpen = showAddMenu; CLOSE_ALL_MENUS(); showAddMenu = !wasOpen;
+    } x += btnWidth + gap;
 
-    // --- NEW: Button: CLEAR ---
-    if (GuiButton((Rectangle){(float)x, startY + 10, (float)btnWidth, 40}, "Clear")) {
-        // 1. Wipe the history (removes all steps/notes)
-        Visualizer::Instance().ClearHistory();
+    if (GuiButton((Rectangle){x, startY + 10, (float)btnWidth, 40}, "Delete")) {
+        bool wasOpen = showDeleteMenu; CLOSE_ALL_MENUS(); showDeleteMenu = !wasOpen;
+    } x += btnWidth + gap;
 
-        // 2. Reset the Data Structure to empty
-        // Passing an empty vector {} creates a blank list
-        avl.init({});
+    if (GuiButton((Rectangle){x, startY + 10, (float)btnWidth, 40}, "Update")) {
+        bool wasOpen = showUpdateMenu; CLOSE_ALL_MENUS(); showUpdateMenu = !wasOpen;
+    } x += btnWidth + gap;
 
-        // 3. Reset UI state
-        showCreateMenu = false;
-        showInsertMenu = false;
-        showDeleteMenu = false;
-        Visualizer::Instance().SetPlaying(false);
-    }
+    if (GuiButton((Rectangle){x, startY + 10, (float)btnWidth, 40}, "Search")) {
+        bool wasOpen = showSearchMenu; CLOSE_ALL_MENUS(); showSearchMenu = !wasOpen;
+    } x += btnWidth + gap + 20;
 
-    // --- Sub Menus (Logic remains the same) ---
-    if (showCreateMenu) DrawCreateMenu(20, startY + 60);
-    else if (showInsertMenu) DrawInsertMenu(130, startY + 60);
-    else if (showDeleteMenu) DrawDeleteMenu(240, startY + 60);
+
+    // --- THE POPUPS ---
+    if (showInitMenu)   DrawInitMenu(20, startY + 60);
+    if (showAddMenu)    DrawAddMenu(20, startY + 60);
+    if (showDeleteMenu) DrawDeleteMenu(20, startY + 60);
+    if (showUpdateMenu) DrawUpdateMenu(20, startY + 60);
+    if (showSearchMenu) DrawSearchMenu(20, startY + 60);
 }
 
+// ---------------------------------------------------------
+// FLATTENED POPUP SCREENS (With Enter Key & Auto-Clear)
+// ---------------------------------------------------------
+void AVLState::DrawInitMenu(float x, float y) {
+    DrawRectangle(x, y, 620, 120, RAYWHITE);
+    DrawRectangleLines(x, y, 620, 120, GRAY);
 
-void AVLState::DrawCreateMenu(float x, float y) {
-    DrawText("Values", x, y + 5, 20, BLACK);
-
-    if (GuiTextBox((Rectangle){x + 210, y, 100, 30}, inputBuffer, 64, isInputActive)) {
-        isInputActive = !isInputActive;
-    }
-
-    if (GuiButton((Rectangle){x + 310, y, 40, 30}, "Go")) {
-        Visualizer::Instance().ClearHistory(); // Clear old data
-
-        std::vector<int> values;
-        std::stringstream ss(inputBuffer);
-        std::string segment;
-        while(std::getline(ss, segment, ',')) {
-            try { values.push_back(std::stoi(segment)); } catch(...) {}
-        }
-
-        if (!values.empty()) avl.init(values);
-
-        Visualizer::Instance().GoToEnd();
+    // Row 1
+    if (GuiButton((Rectangle){x + 10, y + 10, 120, 30}, "Empty (Clear)")) {
+        Visualizer::Instance().ClearHistory();
+        avl.init({});
         Visualizer::Instance().SetPlaying(false);
     }
 
-    y += 40; // Move down one row
+    DrawText("A =", x + 150, y + 15, 20, BLACK);
+    if (GuiTextBox((Rectangle){x + 190, y + 10, 150, 30}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
 
-    DrawText("Random Size (N):", x, y + 5, 20, BLACK);
+    // Trigger on Button OR Enter Key
+    if (GuiButton((Rectangle){x + 350, y + 10, 40, 30}, "Go") || (isInputActive && IsKeyPressed(KEY_ENTER))) {
+        if (inputBuffer[0] != '\0') {
+            Visualizer::Instance().ClearHistory();
+            std::vector<int> values;
+            std::stringstream ss(inputBuffer);
+            std::string segment;
+            while(std::getline(ss, segment, ',')) { try { values.push_back(std::stoi(segment)); } catch(...) {} }
+            if (!values.empty()) avl.init(values);
 
-    // New Input for N (using a static buffer so we don't need to change .h file)
-    static char nBuffer[16] = "5"; // Default to 5
-    static bool nInputActive = false;
+            Visualizer::Instance().SetStep(0);
+            Visualizer::Instance().SetPlaying(true);
 
-    if (GuiTextBox((Rectangle){x + 200, y, 50, 30}, nBuffer, 16, nInputActive)) {
-        nInputActive = !nInputActive;
+            // Clean up UI
+            inputBuffer[0] = '\0';
+            isInputActive = false;
+        }
     }
 
-    // Button: Generate Random
-    if (GuiButton((Rectangle){x + 260, y, 90, 30}, "Generate")) {
-        Visualizer::Instance().ClearHistory(); // Clear old data
+    // Row 2
+    DrawText("Random N =", x + 10, y + 65, 20, BLACK);
+    if (GuiTextBox((Rectangle){x + 130, y + 60, 50, 30}, nBuffer, 16, nInputActive)) nInputActive = !nInputActive;
 
+    // Trigger on Button OR Enter Key
+    if (GuiButton((Rectangle){x + 190, y + 60, 90, 30}, "Generate") || (nInputActive && IsKeyPressed(KEY_ENTER))) {
+        Visualizer::Instance().ClearHistory();
         int n = atoi(nBuffer);
-
-        // Safety Limit: Don't crash with 1000 nodes
-        if (n < 1) n = 1;
-        if (n > 50) n = 50; // Limit to 50 for screen space
-
+        if (n < 1) n = 1; if (n > 31) n = 31;
         std::vector<int> values;
-        for(int i = 0; i < n; i++) {
-            values.push_back(GetRandomValue(1, 99));
-        }
-
+        for(int i = 0; i < n; i++) values.push_back(GetRandomValue(1, 99));
         avl.init(values);
 
-        Visualizer::Instance().GoToEnd();
-        Visualizer::Instance().SetPlaying(false);
+        Visualizer::Instance().SetStep(0);
+        Visualizer::Instance().SetPlaying(true);
+
+        nBuffer[0] = '\0';
+        nInputActive = false;
     }
 
-    y += 40; // Move down again
-    // C. Load File
-    if (GuiButton((Rectangle){x, y, 120, 30}, "Browse...")) {
-
-        // A. Define file filters (e.g., only .txt files)
+    if (GuiButton((Rectangle){x + 300, y + 60, 120, 30}, "Browse File...")) {
         const char *filterPatterns[1] = { "*.txt" };
-
-        // B. Open the Dialog
-        // Args: Title, Default Path, Num Filters, Filter Patterns, Description, Allow Multi-select
-        const char *filePath = tinyfd_openFileDialog(
-            "Select Input File",
-            "",
-            1,
-            filterPatterns,
-            "Text Files",
-            0
-        );
-
-        // C. If user selected a file (filePath is not NULL)
+        const char *filePath = tinyfd_openFileDialog("Select Input File", "", 1, filterPatterns, "Text Files", 0);
         if (filePath != NULL) {
             std::ifstream file(filePath);
             if (file.is_open()) {
-                std::vector<int> values;
-                int val;
-                std::string temp;
-
-                // Read integers from file (ignores commas/spaces)
-                while (file >> val) {
-                    values.push_back(val);
-                    // Optional: handle commas if your file format is "1,2,3"
-                    if (file.peek() == ',') file.ignore();
-                }
-
+                std::vector<int> values; int val;
+                while (file >> val) { values.push_back(val); if (file.peek() == ',') file.ignore(); }
                 file.close();
+                if (!values.empty()) avl.init(values);
 
-                // Initialize the list if we found data
-                if (!values.empty()) {
-                    avl.init(values);
-                }
+                Visualizer::Instance().SetStep(0);
+                Visualizer::Instance().SetPlaying(true);
             }
         }
     }
 }
 
-void AVLState::DrawInsertMenu(float x, float y) {
-    DrawText("Values", x, y + 5, 20, BLACK);
-    if (GuiTextBox((Rectangle){x + 60, y, 80, 30}, inputBuffer, 64, isInputActive)) {
-        isInputActive = !isInputActive;
-    }
-    if (GuiButton((Rectangle){x, y + 40, 60, 30}, "Insert")) {
-        int startStep = Visualizer::Instance().GetTotalSteps();
-        avl.insert(atoi(inputBuffer));
-        Visualizer::Instance().SetStep(startStep);
-        Visualizer::Instance().SetPlaying(true);
+void AVLState::DrawAddMenu(float x, float y) {
+    DrawRectangle(x, y, 200, 120, RAYWHITE);
+    DrawRectangleLines(x, y, 200, 120, GRAY);
+
+    DrawText("Value:", x + 10, y + 25, 20, BLACK);
+    if (GuiTextBox((Rectangle){x + 80, y + 20, 80, 30}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
+
+    if (GuiButton((Rectangle){x + 10, y + 70, 150, 30}, "Insert Value") || IsKeyPressed(KEY_ENTER)) {
+        if (inputBuffer[0] != '\0') {
+            Visualizer::Instance().ClearHistory();
+            Visualizer::Instance().RecordState("Initial State", 0, avl.captureState(), {});
+            avl.insert(atoi(inputBuffer));
+            Visualizer::Instance().SetStep(0);
+            Visualizer::Instance().SetPlaying(true);
+
+            // Clean up UI
+            inputBuffer[0] = '\0';
+            isInputActive = false;
+        }
     }
 }
 
 void AVLState::DrawDeleteMenu(float x, float y) {
-    if (GuiButton((Rectangle){x, y + 40, 100, 30}, "Delete Root")) {
-        int startStep = Visualizer::Instance().GetTotalSteps();
-        //avl.extractMin();
-        Visualizer::Instance().SetStep(startStep);
-        Visualizer::Instance().SetPlaying(true);
+    DrawRectangle(x, y, 200, 120, RAYWHITE);
+    DrawRectangleLines(x, y, 200, 120, GRAY);
+
+    DrawText("Value:", x + 10, y + 25, 20, BLACK);
+    if (GuiTextBox((Rectangle){x + 80, y + 20, 80, 30}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
+
+    if (GuiButton((Rectangle){x + 10, y + 70, 150, 30}, "Delete Value") || IsKeyPressed(KEY_ENTER)) {
+        if (inputBuffer[0] != '\0') {
+            Visualizer::Instance().ClearHistory();
+            Visualizer::Instance().RecordState("Initial State", 0, avl.captureState(), {});
+            avl.deleteNode(atoi(inputBuffer));
+            Visualizer::Instance().SetStep(0);
+            Visualizer::Instance().SetPlaying(true);
+
+            // Clean up UI
+            inputBuffer[0] = '\0';
+            isInputActive = false;
+        }
     }
 }
 
+void AVLState::DrawUpdateMenu(float x, float y) {
+    DrawRectangle(x, y, 350, 120, RAYWHITE);
+    DrawRectangleLines(x, y, 350, 120, GRAY);
+
+    DrawText("Old Val:", x + 10, y + 25, 20, BLACK);
+    if (GuiTextBox((Rectangle){x + 90, y + 20, 60, 30}, oldBuffer, 64, isOldActive)) isOldActive = !isOldActive;
+
+    DrawText("New Val:", x + 160, y + 25, 20, BLACK);
+    if (GuiTextBox((Rectangle){x + 250, y + 20, 80, 30}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
+
+    if (GuiButton((Rectangle){x + 10, y + 70, 320, 30}, "Update Value") || IsKeyPressed(KEY_ENTER)) {
+        if (oldBuffer[0] != '\0' && inputBuffer[0] != '\0') {
+            Visualizer::Instance().ClearHistory();
+            Visualizer::Instance().RecordState("Initial State", 0, avl.captureState(), {});
+            avl.updateNode(atoi(oldBuffer), atoi(inputBuffer));
+            Visualizer::Instance().SetStep(0);
+            Visualizer::Instance().SetPlaying(true);
+
+            // Clean up UI
+            oldBuffer[0] = '\0';
+            inputBuffer[0] = '\0';
+            isOldActive = false;
+            isInputActive = false;
+        }
+    }
+}
+
+void AVLState::DrawSearchMenu(float x, float y) {
+    DrawRectangle(x, y, 200, 120, RAYWHITE);
+    DrawRectangleLines(x, y, 200, 120, GRAY);
+
+    DrawText("Value:", x + 10, y + 25, 20, BLACK);
+    if (GuiTextBox((Rectangle){x + 80, y + 20, 80, 30}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
+
+    if (GuiButton((Rectangle){x + 10, y + 70, 150, 30}, "Search Value") || IsKeyPressed(KEY_ENTER)) {
+        if (inputBuffer[0] != '\0') {
+            Visualizer::Instance().ClearHistory();
+            Visualizer::Instance().RecordState("Initial State", 0, avl.captureState(), {});
+            avl.searchNode(atoi(inputBuffer));
+            Visualizer::Instance().SetStep(0);
+            Visualizer::Instance().SetPlaying(true);
+
+            // Clean up UI
+            inputBuffer[0] = '\0';
+            isInputActive = false;
+        }
+    }
+}
 void AVLState::DrawPlayback() {
     int centerX = GetScreenWidth() / 2;
-    int y = GetScreenHeight() - 240;
+    int y = GetScreenHeight() - 240; // Floating perfectly above the bottom toolbar
 
-    // 1. Navigation Buttons
     if (GuiButton((Rectangle){(float)centerX - 100, (float)y, 40, 30}, "<<")) Visualizer::Instance().GoToStart();
     if (GuiButton((Rectangle){(float)centerX - 50, (float)y, 40, 30}, "<")) Visualizer::Instance().PrevStep();
 
-    // 2. Play / Pause Button
     const char* label = Visualizer::Instance().IsPlaying() ? "||" : ">";
-    if (GuiButton((Rectangle){(float)centerX, (float)y, 40, 30}, label)) {
-        Visualizer::Instance().TogglePlay();
-    }
+    if (GuiButton((Rectangle){(float)centerX, (float)y, 40, 30}, label)) Visualizer::Instance().TogglePlay();
 
     if (GuiButton((Rectangle){(float)centerX + 50, (float)y, 40, 30}, ">")) Visualizer::Instance().NextStep();
     if (GuiButton((Rectangle){(float)centerX + 100, (float)y, 40, 30}, ">>")) Visualizer::Instance().GoToEnd();
 
-    // 3. Speed Slider (Fixed)
-    DrawText("Speed:", centerX + 160, y + 5, 20, BLACK);
-
-    // FIX: Using member variable 'playbackSpeed'
-    // FIX: Range is 0.1 (Left/Fast) to 2.0 (Right/Slow)
-    // We update the Visualizer every frame to ensure it stays in sync
-    GuiSlider((Rectangle){(float)centerX + 270, (float)y, 100, 30}, "Fast", "Slow", &playbackSpeed, 0.1f, 2.0f);
-
-    // Always apply the speed
+    DrawText("Speed:", centerX + 220, y + 5, 20, BLACK);
+    GuiSlider((Rectangle){(float)centerX + 350, (float)y, 100, 30}, "Fast", "Slow", &playbackSpeed, 0.1f, 2.0f);
     Visualizer::Instance().SetSpeed(playbackSpeed);
 }
 
 void AVLState::DrawPseudocode() {
-    int panelW = 400;
+    int panelW = 600;
     int panelH = 200;
     int startX = GetScreenWidth() - panelW;
-    int startY = GetScreenHeight() - panelH;
+    int startY = GetScreenHeight() - 200;
 
     // Background
     DrawRectangle(startX, startY, panelW, panelH, Fade(BLACK, 0.8f));

@@ -16,10 +16,11 @@ struct AVLNode {
 
 class AVLTree {
 private:
-    AVLNode* root = NULL;
+    AVLNode* root = nullptr;
     int nextNodeID = 0;
     int nodeCount = 0;
 
+    // --- Math & Logic ---
     int height(AVLNode* N);
     int getBalanceFactor(AVLNode* N);
     AVLNode* rightRotate(AVLNode* y);
@@ -27,13 +28,25 @@ private:
     AVLNode* insertNode(AVLNode* node, int data);
     void destroyTree(AVLNode* node);
 
+    // --- Visual Helpers ---
     void calcPositions(AVLNode* node, float x, float y, float hSpacing);
     void collectVisualNodes(AVLNode* node, std::vector<VisualNode>& visuals, int h1, int h2, Color c);
-    std::vector<VisualNode> captureState(int highlightVal1 = -1, int highlightVal2 = -1, Color c = HIGHLIGHT_COLOR);
+
+    AVLNode* minValueNode(AVLNode* node);
+    AVLNode* deleteNodeHelper(AVLNode* root, int value);
+
 public:
     AVLTree() = default;
     ~AVLTree();
+
     void init(std::vector<int> values);
     void insert(int value);
     void clear();
+
+    void deleteNode(int value);
+    void updateNode(int oldVal, int newVal);
+    void searchNode(int value);
+
+    // 🐛 MOVED HERE: Now AVLState.cpp is allowed to use it!
+    std::vector<VisualNode> captureState(int h1 = -1, int h2 = -1, Color c = BLUE);
 };

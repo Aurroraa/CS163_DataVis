@@ -95,3 +95,31 @@ void Visualizer::RecordState(std::string msg, int line, std::vector<VisualNode> 
     state.codeText = code;
     history.push_back(state);
 }
+
+AnimationState Visualizer::GetRenderState() const {
+    if (history.empty()) return AnimationState();
+    AnimationState renderState = history[currentStep];
+
+    for (auto& node : renderState.nodes) {
+        node.drawX = node.x; node.drawY = node.y;
+    }
+
+    if (!isPlaying || currentStep >= history.size() - 1) return renderState;
+
+    const AnimationState& nextState = history[currentStep + 1];
+    float t = timer / playbackSpeed;
+    if (t > 1.0f) t = 1.0f; if (t < 0.0f) t = 0.0f;
+    float smooth_t = t * t * (3.0f - 2.0f * t);
+
+    for (auto& currNode : renderState.nodes) {
+        for (const auto& nextNode : nextState.nodes) {
+            // 🐛 FIX: Match by unique ID so duplicate values don't criss-cross!
+            if (currNode.id == nextNode.id) {
+                currNode.drawX = currNode.x + (nextNode.x - currNode.x) * smooth_t;
+                currNode.drawY = currNode.y + (nextNode.y - currNode.y) * smooth_t;
+                break;
+            }
+        }
+    }
+    return renderState;
+}

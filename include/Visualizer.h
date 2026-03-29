@@ -45,4 +45,5 @@ public:
     void ClearHistory();
 
     const AnimationState& GetCurrentState() const;
+    AnimationState GetRenderState() const;
 };

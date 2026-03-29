@@ -100,20 +100,20 @@ namespace DLLRenderer {
 
         // 2. Draw Nodes
         for (const auto& node : state.nodes) {
-            DrawCircle(node.x, node.y, 32, BLACK);
+            DrawCircle(node.drawX, node.drawY, 32, BLACK);
 
             // 🐛 FIX 1: Use node.color instead of RAYWHITE so animations show up!
-            DrawCircle(node.x, node.y, 30, node.color);
-            DrawCircleLines(node.x, node.y, 30, BLACK);
+            DrawCircle(node.drawX, node.drawY, 30, node.color);
+            DrawCircleLines(node.drawX, node.drawY, 30, BLACK);
 
             std::string text = std::to_string(node.data);
             int textWidth = MeasureText(text.c_str(), 20);
 
             // 🐛 FIX 2: White text contrasts better against colored nodes
-            DrawText(text.c_str(), node.x - textWidth / 2, node.y - 10, 20, WHITE);
+            DrawText(text.c_str(), node. drawX- textWidth / 2, node.drawY - 10, 20, WHITE);
 
             // Draw Index (Slightly larger and Red to match your Heap style)
-            DrawText(TextFormat("%d", node.id), node.x - 5, node.y + 35, 15, RED);
+            DrawText(TextFormat("%d", node.id), node.drawX - 5, node.drawY + 35, 15, RED);
         }
 
         // Draw Message

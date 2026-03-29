@@ -14,7 +14,7 @@ private:
     DLLNode* tail;
 
     // Helper to position nodes for drawing
-    std::vector<VisualNode> captureState();
+    std::vector<VisualNode> captureState(int highlightIndex = -1, Color highlightColor = BLUE);
 
     // NEW Helper
     int getCount();
@@ -26,5 +26,11 @@ public:
     void init(std::vector<int> values);
     void addHead(int value);
     void addTail(int value);
-    void deleteNode(int value);
+    void addAtIndex(int index, int value);
+    void deleteHead();
+    void deleteTail();
+    void deleteAtIndex(int index);
+    void updateAtIndex(int index, int value);
+    void searchNode(int value);
+
 };

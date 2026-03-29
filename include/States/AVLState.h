@@ -1,10 +1,10 @@
 #pragma once
 #include "State.h"
-#include "../DataStructures/DoublyLinkedList.h"
+#include "../DataStructures/AVLTree.h"
 
-class DLLState : public State {
+class AVLState : public State {
 private:
-    DoublyLinkedList dll;
+    AVLTree avl;
 
     // The 5 Main Menu Flags
     bool showInitMenu = false;
@@ -15,17 +15,17 @@ private:
 
     // Inputs
     bool isInputActive = false;
-    char inputBuffer[64] = {0};
+    char inputBuffer[64] = {0}; // Used for Value / New Value
 
-    bool isLocActive = false;
-    char locBuffer[64] = {0};
+    bool isOldActive = false;
+    char oldBuffer[64] = {0};   // Used for Old Value in Update
 
     bool nInputActive = false;
     char nBuffer[16] = "5";
 
     float playbackSpeed = 0.5f;
 
-    // Restored the Toolbar!
+    // The Bottom Toolbar
     void DrawToolbar();
 
     // Flattened Popup Screens
@@ -39,7 +39,7 @@ private:
     void DrawPlayback();
 
 public:
-    DLLState();
+    AVLState();
     void Init() override;
     void Update() override;
     void Draw() override;

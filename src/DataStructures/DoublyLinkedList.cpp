@@ -35,7 +35,7 @@ int DoublyLinkedList::getCount() {
 // ---------------------------------------------------------
 // 1. CAPTURE STATE (Single Line Layout)
 // ---------------------------------------------------------
-std::vector<VisualNode> DoublyLinkedList::captureState() {
+std::vector<VisualNode> DoublyLinkedList::captureState(int highlightIndex, Color highlightColor) {
     std::vector<VisualNode> visuals;
     DLLNode* current = head;
     int index = 0;
@@ -62,7 +62,11 @@ std::vector<VisualNode> DoublyLinkedList::captureState() {
         VisualNode v;
         v.id = index;
         v.data = current->data;
-        v.color = BLUE;
+
+        if (index == highlightIndex) {
+            v.color = highlightColor;
+        }
+        else v.color = BLUE;
 
         // 3. POSITIONING
         v.x = startX + (index * spacing);
@@ -176,54 +180,189 @@ void DoublyLinkedList::addTail(int value) {
     Visualizer::Instance().RecordState("Updating Tail Pointer", 3, captureState(), code);
 }
 
-// ---------------------------------------------------------
-// 5. DELETE NODE
-// ---------------------------------------------------------
-void DoublyLinkedList::deleteNode(int value) {
+void DoublyLinkedList::addAtIndex(int index, int value) {
     std::vector<std::string> code = {
-        "Node* curr = head;",
-        "while (curr && curr->data != val) curr = curr->next;",
-        "if (curr) { unlink(curr); delete curr; }"
+        "if index == 0: addHead(val)",
+        "if index == size: addTail(val)",
+        "Traverse to index",
+        "Node* newNode = new Node(val)",
+        "newNode->next = curr",
+        "newNode->prev = curr->prev",
+        "curr->prev->next = newNode",
+        "cur->prev = newNode"
     };
 
-    if (!head) return;
-
-    DLLNode* current = head;
-    int index = 0;
-
-    // Search
-    while (current != nullptr && current->data != value) {
-        std::vector<VisualNode> frame = captureState();
-        if (index < frame.size()) frame[index].color = ORANGE;
-        Visualizer::Instance().RecordState("Searching for " + std::to_string(value), 1, frame, code);
-
-        current = current->next;
-        index++;
-    }
-
-    if (!current) {
-        Visualizer::Instance().RecordState("Value not found.", 1, captureState(), code);
+    if (index <= 0) {
+        Visualizer::Instance().RecordState("Index is 0, routing to Add Head", 0, captureState(-1, GREEN), code);
+        addHead(value);
         return;
     }
 
-    // Found
-    std::vector<VisualNode> frame = captureState();
-    if (index < frame.size()) frame[index].color = RED;
-    Visualizer::Instance().RecordState("Found target node", 2, frame, code);
+    int size = getCount();
 
-    // Unlink
-    if (current == head) {
-        head = head->next;
-        if (head) head->prev = nullptr;
-        else tail = nullptr;
-    } else if (current == tail) {
-        tail = tail->prev;
-        if (tail) tail->next = nullptr;
-    } else {
-        current->prev->next = current->next;
-        current->next->prev = current->prev;
+    if (index >= size) {
+        Visualizer::Instance().RecordState("Index >= size, routing to Add Tail", 1, captureState(-1, GREEN), code);
+        addTail(value);
+        return;
     }
 
-    delete current;
-    Visualizer::Instance().RecordState("Node Deleted", 2, captureState(), code);
+    DLLNode* curr = head;
+    for (int i = 0; i < index; i++) {
+        Visualizer::Instance().RecordState("Traversing... at index " + std::to_string(i), 2, captureState(i, ORANGE), code);
+        curr = curr->next;
+    }
+
+    Visualizer::Instance().RecordState("Found insertion point at index " + std::to_string(index), 2, captureState(index, ORANGE), code);
+
+    DLLNode* newNode = new DLLNode{value, curr, curr->prev};
+    if (curr -> prev) curr -> prev->next = newNode;
+    curr -> prev = newNode;
+
+    Visualizer::Instance().RecordState("Inserted " + std::to_string(value) + " at index " + std::to_string(index), 6, captureState(index, GREEN), code);
+}
+
+void DoublyLinkedList::deleteHead() {
+    std::vector<std::string> code = {
+        "if head == null: return",
+        "Node* temp = head",
+        "head = head->next",
+        "if head != null: head->prev = null",
+        "delete temp"
+    };
+
+    if (!head) {
+        Visualizer::Instance().RecordState("List is already empty!", 0, captureState(), code);
+        return;
+    }
+
+    Visualizer::Instance().RecordState("Targeting Head Node for deletion", 1, captureState(0, RED), code);
+
+    DLLNode* temp = head;
+    head = head->next;
+    if (head) head->prev = nullptr;
+    else tail = nullptr; // List became empty
+
+    delete temp;
+
+    Visualizer::Instance().RecordState("Deleted Head Node", 4, captureState(-1, GREEN), code);
+}
+
+void DoublyLinkedList::deleteTail() {
+    std::vector<std::string> code = {
+        "if tail == null: return",
+        "Node* temp = tail",
+        "tail = tail->prev",
+        "if tail != null: tail->next = null",
+        "delete temp"
+    };
+
+    if (!tail) {
+        Visualizer::Instance().RecordState("List is already empty!", 0, captureState(), code);
+        return;
+    }
+
+    // Count size to find the tail index for highlighting
+    int tailIdx = 0;
+    DLLNode* countTemp = head;
+    while (countTemp && countTemp->next) { tailIdx++; countTemp = countTemp->next; }
+
+    Visualizer::Instance().RecordState("Targeting Tail Node for deletion", 1, captureState(tailIdx, RED), code);
+
+    DLLNode* temp = tail;
+    tail = tail->prev;
+    if (tail) tail->next = nullptr;
+    else head = nullptr; // List became empty
+
+    delete temp;
+
+    Visualizer::Instance().RecordState("Deleted Tail Node", 4, captureState(-1, GREEN), code);
+}
+
+void DoublyLinkedList::deleteAtIndex(int index) {
+    std::vector<std::string> code = {
+        "if index == 0: deleteHead()",
+        "Traverse to index",
+        "if curr == tail: deleteTail()",
+        "curr->prev->next = curr->next",
+        "curr->next->prev = curr->prev",
+        "delete curr"
+    };
+
+    if (index <= 0 || !head) {
+        Visualizer::Instance().RecordState("Index is 0, routing to Delete Head", 0, captureState(), code);
+        deleteHead();
+        return;
+    }
+
+    DLLNode* curr = head;
+    for (int i = 0; i < index; i++) {
+        if (!curr->next) break; // Out of bounds prevention
+        Visualizer::Instance().RecordState("Traversing... at index " + std::to_string(i), 1, captureState(i, ORANGE), code);
+        curr = curr->next;
+    }
+
+    if (!curr->next) {
+        Visualizer::Instance().RecordState("Reached end, routing to Delete Tail", 2, captureState(), code);
+        deleteTail();
+        return;
+    }
+
+    Visualizer::Instance().RecordState("Targeting node at index " + std::to_string(index) + " for deletion", 2, captureState(index, RED), code);
+
+    curr->prev->next = curr->next;
+    curr->next->prev = curr->prev;
+    delete curr;
+
+    Visualizer::Instance().RecordState("Node deleted and pointers re-linked!", 5, captureState(-1, GREEN), code);
+}
+
+void DoublyLinkedList::updateAtIndex(int index, int newValue) {
+    std::vector<std::string> code = {
+        "Traverse to index",
+        "if curr == null: return (Out of bounds)",
+        "curr->data = newValue"
+    };
+
+    DLLNode* curr = head;
+    for (int i = 0; i < index; i++) {
+        if (!curr) break;
+        Visualizer::Instance().RecordState("Traversing... at index " + std::to_string(i), 0, captureState(i, ORANGE), code);
+        curr = curr->next;
+    }
+
+    if (!curr) {
+        Visualizer::Instance().RecordState("Index out of bounds!", 1, captureState(), code);
+        return;
+    }
+
+    Visualizer::Instance().RecordState("Found location! Changing " + std::to_string(curr->data) + " to " + std::to_string(newValue), 2, captureState(index, GREEN), code);
+    curr->data = newValue;
+    Visualizer::Instance().RecordState("Value Updated", 2, captureState(index, BLUE), code);
+}
+
+void DoublyLinkedList::searchNode(int value) {
+    std::vector<std::string> code = {
+        "curr = head",
+        "while curr != null:",
+        "  if curr->data == value: return FOUND",
+        "  curr = curr->next",
+        "return NOT FOUND"
+    };
+
+    DLLNode* curr = head;
+    int index = 0;
+
+    while (curr) {
+        Visualizer::Instance().RecordState("Checking if " + std::to_string(curr->data) + " == " + std::to_string(value), 2, captureState(index, ORANGE), code);
+
+        if (curr->data == value) {
+            Visualizer::Instance().RecordState("Value " + std::to_string(value) + " FOUND at index " + std::to_string(index) + "!", 2, captureState(index, GREEN), code);
+            return;
+        }
+
+        curr = curr->next;
+        index++;
+    }
+
+    Visualizer::Instance().RecordState("Reached end of list. Value " + std::to_string(value) + " NOT FOUND.", 4, captureState(-1, RED), code);
 }

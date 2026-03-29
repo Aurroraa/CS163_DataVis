@@ -1,37 +1,38 @@
-#include "../../include/States/DLLState.h"
+#include "../../include/States/AVLState.h"
 #include "../../include/States/SelectState.h"
 #include "../../include/App.h"
 #include "../../include/raygui.h"
 #include "../../include/Visualizer.h"
 #include "../../include/tinyfiledialogs.h"
-#include "../../include/Renderers/DLLRenderer.h"
+#include "../../include/Renderers/AVLRenderer.h"
 #include <cstdlib>
 #include <sstream>
 #include <fstream>
 #include <vector>
 #include <string>
 
-DLLState::DLLState() {
-    dll.init({10, 20, 30});
+AVLState::AVLState() {
+    Visualizer::Instance().ClearHistory();
+    avl.init({});
     playbackSpeed = 0.5f;
 }
 
-void DLLState::Init() {
+void AVLState::Init() {
     showInitMenu = false;
     showAddMenu = false;
     showDeleteMenu = false;
     showUpdateMenu = false;
     showSearchMenu = false;
     inputBuffer[0] = '\0';
-    locBuffer[0] = '\0';
+    oldBuffer[0] = '\0';
     Visualizer::Instance().SetSpeed(playbackSpeed);
 }
 
-void DLLState::Update() {
+void AVLState::Update() {
     Visualizer::Instance().Update();
 }
 
-void DLLState::Draw() {
+void AVLState::Draw() {
     // 1. Canvas restored to float above the toolbar
     DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight() - 200, RAYWHITE);
     Visualizer::Instance().DrawCanvas();
@@ -41,8 +42,8 @@ void DLLState::Draw() {
         g_App->ChangeState(new SelectState());
     }
 
-    // 3. Draw Data Structure
-    DLLRenderer::Draw(Visualizer::Instance().GetRenderState());
+    // 3. Draw Data Structure (Using the smooth animation state!)
+    AVLRenderer::Draw(Visualizer::Instance().GetRenderState());
 
     // 4. UI Components
     DrawToolbar();
@@ -50,10 +51,9 @@ void DLLState::Draw() {
     DrawPseudocode();
 }
 
-void DLLState::DrawToolbar() {
+void AVLState::DrawToolbar() {
     float startY = GetScreenHeight() - 200;
 
-    // Draw Toolbar Background
     DrawRectangle(0, startY, GetScreenWidth(), 200, LIGHTGRAY);
     DrawLine(0, startY, GetScreenWidth(), startY, DARKGRAY);
 
@@ -61,10 +61,9 @@ void DLLState::DrawToolbar() {
     int gap = 10;
     float x = 20;
 
-    // Macro to toggle menus nicely
     #define CLOSE_ALL_MENUS() showInitMenu = showAddMenu = showDeleteMenu = showUpdateMenu = showSearchMenu = false;
 
-    // --- ROW 1: THE MAIN BUTTONS ---
+    // --- THE MAIN BUTTONS ---
     if (GuiButton((Rectangle){x, startY + 10, (float)btnWidth, 40}, "Init")) {
         bool wasOpen = showInitMenu; CLOSE_ALL_MENUS(); showInitMenu = !wasOpen;
     } x += btnWidth + gap;
@@ -85,8 +84,8 @@ void DLLState::DrawToolbar() {
         bool wasOpen = showSearchMenu; CLOSE_ALL_MENUS(); showSearchMenu = !wasOpen;
     } x += btnWidth + gap + 20;
 
-    // --- ROW 2: THE POPUPS ---
-    // Drawn neatly inside the toolbar below the buttons!
+
+    // --- THE POPUPS ---
     if (showInitMenu)   DrawInitMenu(20, startY + 60);
     if (showAddMenu)    DrawAddMenu(20, startY + 60);
     if (showDeleteMenu) DrawDeleteMenu(20, startY + 60);
@@ -95,46 +94,53 @@ void DLLState::DrawToolbar() {
 }
 
 // ---------------------------------------------------------
-// FLATTENED POPUP SCREENS (To fit inside the 200px Toolbar)
+// FLATTENED POPUP SCREENS (With Enter Key & Auto-Clear)
 // ---------------------------------------------------------
-void DLLState::DrawInitMenu(float x, float y) {
+void AVLState::DrawInitMenu(float x, float y) {
     DrawRectangle(x, y, 620, 120, RAYWHITE);
     DrawRectangleLines(x, y, 620, 120, GRAY);
 
-    // Row 1: Clear & User Input
+    // Row 1
     if (GuiButton((Rectangle){x + 10, y + 10, 120, 30}, "Empty (Clear)")) {
         Visualizer::Instance().ClearHistory();
-        dll.init({});
+        avl.init({});
         Visualizer::Instance().SetPlaying(false);
     }
 
     DrawText("A =", x + 150, y + 15, 20, BLACK);
     if (GuiTextBox((Rectangle){x + 190, y + 10, 150, 30}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
+
+    // Trigger on Button OR Enter Key
     if (GuiButton((Rectangle){x + 350, y + 10, 40, 30}, "Go") || (isInputActive && IsKeyPressed(KEY_ENTER))) {
-        Visualizer::Instance().ClearHistory();
-        std::vector<int> values;
-        std::stringstream ss(inputBuffer);
-        std::string segment;
-        while(std::getline(ss, segment, ',')) { try { values.push_back(std::stoi(segment)); } catch(...) {} }
-        if (!values.empty()) dll.init(values);
+        if (inputBuffer[0] != '\0') {
+            Visualizer::Instance().ClearHistory();
+            std::vector<int> values;
+            std::stringstream ss(inputBuffer);
+            std::string segment;
+            while(std::getline(ss, segment, ',')) { try { values.push_back(std::stoi(segment)); } catch(...) {} }
+            if (!values.empty()) avl.init(values);
 
-        Visualizer::Instance().SetStep(0);
-        Visualizer::Instance().SetPlaying(true);
+            Visualizer::Instance().SetStep(0);
+            Visualizer::Instance().SetPlaying(true);
 
-        inputBuffer[0] = '\0';
-        isInputActive = false;
+            // Clean up UI
+            inputBuffer[0] = '\0';
+            isInputActive = false;
+        }
     }
 
-    // Row 2: Random & Browse File
+    // Row 2
     DrawText("Random N =", x + 10, y + 65, 20, BLACK);
     if (GuiTextBox((Rectangle){x + 130, y + 60, 50, 30}, nBuffer, 16, nInputActive)) nInputActive = !nInputActive;
+
+    // Trigger on Button OR Enter Key
     if (GuiButton((Rectangle){x + 190, y + 60, 90, 30}, "Generate") || (nInputActive && IsKeyPressed(KEY_ENTER))) {
         Visualizer::Instance().ClearHistory();
         int n = atoi(nBuffer);
-        if (n < 1) n = 1; if (n > 15) n = 15;
+        if (n < 1) n = 1; if (n > 31) n = 31;
         std::vector<int> values;
         for(int i = 0; i < n; i++) values.push_back(GetRandomValue(1, 99));
-        dll.init(values);
+        avl.init(values);
 
         Visualizer::Instance().SetStep(0);
         Visualizer::Instance().SetPlaying(true);
@@ -152,132 +158,108 @@ void DLLState::DrawInitMenu(float x, float y) {
                 std::vector<int> values; int val;
                 while (file >> val) { values.push_back(val); if (file.peek() == ',') file.ignore(); }
                 file.close();
-                if (!values.empty()) dll.init(values);
+                if (!values.empty()) avl.init(values);
 
                 Visualizer::Instance().SetStep(0);
                 Visualizer::Instance().SetPlaying(true);
-
             }
         }
     }
 }
 
-void DLLState::DrawAddMenu(float x, float y) {
-    DrawRectangle(x, y, 400, 120, RAYWHITE);
-    DrawRectangleLines(x, y, 400, 120, GRAY);
+void AVLState::DrawAddMenu(float x, float y) {
+    DrawRectangle(x, y, 200, 120, RAYWHITE);
+    DrawRectangleLines(x, y, 200, 120, GRAY);
 
     DrawText("Value:", x + 10, y + 25, 20, BLACK);
     if (GuiTextBox((Rectangle){x + 80, y + 20, 80, 30}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
 
-    DrawText("Loc:", x + 180, y + 25, 20, BLACK);
-    if (GuiTextBox((Rectangle){x + 230, y + 20, 80, 30}, locBuffer, 64, isLocActive)) isLocActive = !isLocActive;
+    if (GuiButton((Rectangle){x + 10, y + 70, 150, 30}, "Insert Value") || IsKeyPressed(KEY_ENTER)) {
+        if (inputBuffer[0] != '\0') {
+            Visualizer::Instance().ClearHistory();
+            Visualizer::Instance().RecordState("Initial State", 0, avl.captureState(), {});
+            avl.insert(atoi(inputBuffer));
+            Visualizer::Instance().SetStep(0);
+            Visualizer::Instance().SetPlaying(true);
 
-    if (GuiButton((Rectangle){x + 10, y + 70, 60, 30}, "Head")) {
-        int start = Visualizer::Instance().GetTotalSteps();
-        dll.addHead(atoi(inputBuffer));
-        Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);
-        inputBuffer[0] = '\0';
-        isInputActive = false;
-
-        locBuffer[0] = '\0';
-        isLocActive = false;
-    }
-    if (GuiButton((Rectangle){x + 80, y + 70, 60, 30}, "Tail")) {
-        int start = Visualizer::Instance().GetTotalSteps();
-        dll.addTail(atoi(inputBuffer));
-        Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);
-
-        inputBuffer[0] = '\0';
-        isInputActive = false;
-
-        locBuffer[0] = '\0';
-        isLocActive = false;
-    }
-    if (GuiButton((Rectangle){x + 150, y + 70, 90, 30}, "Location")) {
-        int start = Visualizer::Instance().GetTotalSteps();
-        dll.addAtIndex(atoi(locBuffer), atoi(inputBuffer));
-        Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);
-
-        inputBuffer[0] = '\0';
-        isInputActive = false;
-
-        locBuffer[0] = '\0';
-        isLocActive = false;
+            // Clean up UI
+            inputBuffer[0] = '\0';
+            isInputActive = false;
+        }
     }
 }
 
-void DLLState::DrawDeleteMenu(float x, float y) {
-    DrawRectangle(x, y, 300, 120, RAYWHITE);
-    DrawRectangleLines(x, y, 300, 120, GRAY);
+void AVLState::DrawDeleteMenu(float x, float y) {
+    DrawRectangle(x, y, 200, 120, RAYWHITE);
+    DrawRectangleLines(x, y, 200, 120, GRAY);
 
-    DrawText("Loc:", x + 10, y + 25, 20, BLACK);
-    if (GuiTextBox((Rectangle){x + 60, y + 20, 80, 30}, locBuffer, 64, isLocActive)) isLocActive = !isLocActive;
+    DrawText("Value:", x + 10, y + 25, 20, BLACK);
+    if (GuiTextBox((Rectangle){x + 80, y + 20, 80, 30}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
 
-    if (GuiButton((Rectangle){x + 10, y + 70, 60, 30}, "Head")) {
-        int start = Visualizer::Instance().GetTotalSteps();
-        dll.deleteHead();
-        Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);
+    if (GuiButton((Rectangle){x + 10, y + 70, 150, 30}, "Delete Value") || IsKeyPressed(KEY_ENTER)) {
+        if (inputBuffer[0] != '\0') {
+            Visualizer::Instance().ClearHistory();
+            Visualizer::Instance().RecordState("Initial State", 0, avl.captureState(), {});
+            avl.deleteNode(atoi(inputBuffer));
+            Visualizer::Instance().SetStep(0);
+            Visualizer::Instance().SetPlaying(true);
 
-        locBuffer[0] = '\0';
-        isLocActive = false;
-    }
-    if (GuiButton((Rectangle){x + 80, y + 70, 60, 30}, "Tail")) {
-        int start = Visualizer::Instance().GetTotalSteps();
-        dll.deleteTail();
-        Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);
-
-        locBuffer[0] = '\0';
-        isLocActive = false;
-    }
-    if (GuiButton((Rectangle){x + 150, y + 70, 90, 30}, "Location")|| (isLocActive && IsKeyPressed(KEY_ENTER))) {
-        int start = Visualizer::Instance().GetTotalSteps();
-        dll.deleteAtIndex(atoi(locBuffer));
-        Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);
-
-        locBuffer[0] = '\0';
-        isLocActive = false;
+            // Clean up UI
+            inputBuffer[0] = '\0';
+            isInputActive = false;
+        }
     }
 }
 
-void DLLState::DrawUpdateMenu(float x, float y) {
+void AVLState::DrawUpdateMenu(float x, float y) {
     DrawRectangle(x, y, 350, 120, RAYWHITE);
     DrawRectangleLines(x, y, 350, 120, GRAY);
 
-    DrawText("Loc:", x + 10, y + 25, 20, BLACK);
-    if (GuiTextBox((Rectangle){x + 60, y + 20, 60, 30}, locBuffer, 64, isLocActive)) isLocActive = !isLocActive;
+    DrawText("Old Val:", x + 10, y + 25, 20, BLACK);
+    if (GuiTextBox((Rectangle){x + 90, y + 20, 60, 30}, oldBuffer, 64, isOldActive)) isOldActive = !isOldActive;
 
-    DrawText("New Val:", x + 140, y + 25, 20, BLACK);
-    if (GuiTextBox((Rectangle){x + 230, y + 20, 80, 30}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
+    DrawText("New Val:", x + 160, y + 25, 20, BLACK);
+    if (GuiTextBox((Rectangle){x + 250, y + 20, 80, 30}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
 
-    if (GuiButton((Rectangle){x + 10, y + 70, 200, 30}, "Update Location") || (isLocActive && isInputActive && IsKeyPressed(KEY_ENTER))) {
-        int start = Visualizer::Instance().GetTotalSteps();
-        dll.updateAtIndex(atoi(locBuffer), atoi(inputBuffer));
-        Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);
-        inputBuffer[0] = '\0';
-        isInputActive = false;
-        locBuffer[0] = '\0';
-        isLocActive = false;
+    if (GuiButton((Rectangle){x + 10, y + 70, 320, 30}, "Update Value") || IsKeyPressed(KEY_ENTER)) {
+        if (oldBuffer[0] != '\0' && inputBuffer[0] != '\0') {
+            Visualizer::Instance().ClearHistory();
+            Visualizer::Instance().RecordState("Initial State", 0, avl.captureState(), {});
+            avl.updateNode(atoi(oldBuffer), atoi(inputBuffer));
+            Visualizer::Instance().SetStep(0);
+            Visualizer::Instance().SetPlaying(true);
+
+            // Clean up UI
+            oldBuffer[0] = '\0';
+            inputBuffer[0] = '\0';
+            isOldActive = false;
+            isInputActive = false;
+        }
     }
 }
 
-void DLLState::DrawSearchMenu(float x, float y) {
-    DrawRectangle(x, y, 250, 120, RAYWHITE);
-    DrawRectangleLines(x, y, 250, 120, GRAY);
+void AVLState::DrawSearchMenu(float x, float y) {
+    DrawRectangle(x, y, 200, 120, RAYWHITE);
+    DrawRectangleLines(x, y, 200, 120, GRAY);
 
     DrawText("Value:", x + 10, y + 25, 20, BLACK);
     if (GuiTextBox((Rectangle){x + 80, y + 20, 80, 30}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
 
-    if (GuiButton((Rectangle){x + 10, y + 70, 180, 30}, "Search Value") || (isInputActive && IsKeyPressed(KEY_ENTER))) {
-        int start = Visualizer::Instance().GetTotalSteps();
-        dll.searchNode(atoi(inputBuffer));
-        Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);
+    if (GuiButton((Rectangle){x + 10, y + 70, 150, 30}, "Search Value") || IsKeyPressed(KEY_ENTER)) {
+        if (inputBuffer[0] != '\0') {
+            Visualizer::Instance().ClearHistory();
+            Visualizer::Instance().RecordState("Initial State", 0, avl.captureState(), {});
+            avl.searchNode(atoi(inputBuffer));
+            Visualizer::Instance().SetStep(0);
+            Visualizer::Instance().SetPlaying(true);
 
-        inputBuffer[0] = '\0';
-        isInputActive = false;
+            // Clean up UI
+            inputBuffer[0] = '\0';
+            isInputActive = false;
+        }
     }
 }
-
-void DLLState::DrawPlayback() {
+void AVLState::DrawPlayback() {
     int centerX = GetScreenWidth() / 2;
     int y = GetScreenHeight() - 240; // Floating perfectly above the bottom toolbar
 
@@ -295,7 +277,7 @@ void DLLState::DrawPlayback() {
     Visualizer::Instance().SetSpeed(playbackSpeed);
 }
 
-void DLLState::DrawPseudocode() {
+void AVLState::DrawPseudocode() {
     int panelW = 600;
     int panelH = 200;
     int startX = GetScreenWidth() - panelW;

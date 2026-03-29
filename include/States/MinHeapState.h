@@ -1,10 +1,10 @@
 #pragma once
 #include "State.h"
-#include "../DataStructures/DoublyLinkedList.h"
+#include "../DataStructures/MinHeap.h"
 
-class DLLState : public State {
+class MinHeapState : public State {
 private:
-    DoublyLinkedList dll;
+    MinHeap heap;
 
     // The 5 Main Menu Flags
     bool showInitMenu = false;
@@ -25,7 +25,7 @@ private:
 
     float playbackSpeed = 0.5f;
 
-    // Restored the Toolbar!
+    // The Bottom Toolbar
     void DrawToolbar();
 
     // Flattened Popup Screens
@@ -39,7 +39,7 @@ private:
     void DrawPlayback();
 
 public:
-    DLLState();
+    MinHeapState();
     void Init() override;
     void Update() override;
     void Draw() override;

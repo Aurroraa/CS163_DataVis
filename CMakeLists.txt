@@ -50,6 +50,12 @@ add_executable(CS163_DataVis
         src/DataStructures/AVLTree.cpp
         src/Renderers/AVLRenderer.cpp
         src/States/AVLState.cpp
+        include/DataStructures/Trie.h
+        include/Renderers/TrieRenderer.h
+        src/DataStructures/Trie.cpp
+        include/States/TrieState.h
+        src/Renderers/TrieRenderer.cpp
+        src/States/TrieState.cpp
 )
 
 # --- 3. Link Raylib to your app ---

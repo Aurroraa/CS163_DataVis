@@ -1,0 +1,8 @@
+//
+// Created by ADMIN on 3/29/2026.
+//
+
+#ifndef CS163_DATAVIS_TRIESTATE_H
+#define CS163_DATAVIS_TRIESTATE_H
+
+#endif //CS163_DATAVIS_TRIESTATE_H

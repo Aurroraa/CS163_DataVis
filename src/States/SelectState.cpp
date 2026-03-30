@@ -3,6 +3,7 @@
 #include "../../include/States/DLLState.h"
 #include "../../include/States/AVLState.h"
 #include "../../include/States/TrieState.h"
+#include "../../include/States/GraphState.h"
 #include "States/MinHeapState.h"
 #include "../../include/App.h"
 #include "../../include/raygui.h"
@@ -45,5 +46,8 @@ void SelectState::Draw() {
     }
     if (GuiButton((Rectangle){(float)startX + btnWidth/2.0f, (float)startY + btnHeight + 100, (float)btnWidth, (float)btnHeight}, "Trie")) {
         g_App->ChangeState(new TrieState());
+    }
+    if (GuiButton((Rectangle){(float)startX + btnWidth/2.0f + btnWidth + 50, (float)startY + btnHeight + 100, (float)btnWidth, (float)btnHeight}, "Graph")) {
+        g_App->ChangeState(new GraphState());
     }
 }

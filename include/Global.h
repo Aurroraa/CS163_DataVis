@@ -27,6 +27,14 @@ enum AppState {
     EXIT
 };
 
+struct VisualEdge {
+    int fromId;
+    int toId;
+    int weight;
+    Color color;
+    bool isDirected;
+};
+
 // 2. The Animation State
 // This struct holds EVERYTHING needed to draw the screen at one specific moment.
 struct AnimationState {
@@ -36,6 +44,12 @@ struct AnimationState {
     
     // -- Visual Data (Generic for now) --
     std::vector<VisualNode> nodes;
+    std::vector<VisualEdge> edges;
     int highlightIndex;         // Which item in the vector is active?
     std::vector<std::string> codeText;
+
+    std::vector<std::vector<std::string>> table;
+    std::vector<std::string> finalPaths;
+
+    bool isDirected = false;
 };

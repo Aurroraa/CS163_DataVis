@@ -42,6 +42,7 @@ public:
     // Drawing & Logic
     void DrawCanvas();
     void RecordState(std::string msg, int line, std::vector<VisualNode> nodes, std::vector<std::string> code);
+    void RecordState(std::string msg, int line, AnimationState state, std::vector<std::string> code);
     void ClearHistory();
 
     const AnimationState& GetCurrentState() const;

@@ -56,6 +56,12 @@ add_executable(CS163_DataVis
         include/States/TrieState.h
         src/Renderers/TrieRenderer.cpp
         src/States/TrieState.cpp
+        include/DataStructures/Graph.h
+        src/DataStructures/Graph.cpp
+        include/Renderers/GraphRenderer.h
+        src/Renderers/GraphRenderer.cpp
+        include/States/GraphState.h
+        src/States/GraphState.cpp
 )
 
 # --- 3. Link Raylib to your app ---

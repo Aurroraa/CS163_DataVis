@@ -123,3 +123,12 @@ AnimationState Visualizer::GetRenderState() const {
     }
     return renderState;
 }
+
+void Visualizer::RecordState(std::string message, int codeLineIndex, AnimationState state, std::vector<std::string> codeText) {
+    state.message = message;
+    state.codeLineIndex = codeLineIndex;
+    state.codeText = codeText;
+
+    // Change these two lines to match your exact variable names!
+    history.push_back(state);
+}

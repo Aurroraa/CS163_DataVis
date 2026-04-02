@@ -27,108 +27,102 @@ namespace GraphRenderer {
         }
     }
 
-    void Draw(const AnimationState& state) {
+    void Draw(const AnimationState& state, UIConfig config) {
         std::unordered_map<int, Vector2> nodeMap;
         for (const auto &node : state.nodes) nodeMap[node.id] = {node.drawX, node.drawY};
 
-       // 1. Draw Edges
-        for (const auto& edge : state.edges) {
-            Vector2 start = {0, 0};
-            Vector2 end = {0, 0};
+        Color textCol = config.isDarkMode ? Color{226, 215, 193, 255} : Color{40, 40, 40, 255};
+        Color nodeBgCol = config.isDarkMode ? Color{35, 41, 49, 255} : Color{250, 250, 250, 255};
+        Color defaultBorderCol = config.isDarkMode ? Color{162, 151, 137, 255} : Color{242, 182, 182, 255};
+        Color defaultEdgeCol = config.isDarkMode ? Color{80, 85, 95, 255} : Color{200, 200, 200, 255}; // Softer edges
 
+        // 1. Draw Edges
+        for (const auto& edge : state.edges) {
+            Vector2 start = {0, 0}; Vector2 end = {0, 0};
             for (const auto& node : state.nodes) {
                 if (node.id == edge.fromId) { start.x = node.drawX; start.y = node.drawY; }
                 if (node.id == edge.toId) { end.x = node.drawX; end.y = node.drawY; }
             }
 
-            float dx = end.x - start.x;
-            float dy = end.y - start.y;
+            float dx = end.x - start.x; float dy = end.y - start.y;
             float length = std::sqrt(dx*dx + dy*dy);
 
             if (length > 0) {
-                float dirX = dx / length;
-                float dirY = dy / length;
+                float dirX = dx / length; float dirY = dy / length;
 
-                // 🌟 PARALLEL SHIFT: If directed, check if a reverse edge exists!
                 if (state.isDirected) {
                     bool hasReverse = false;
                     for (const auto& otherEdge : state.edges) {
-                        if (otherEdge.fromId == edge.toId && otherEdge.toId == edge.fromId) {
-                            hasReverse = true; break;
-                        }
+                        if (otherEdge.fromId == edge.toId && otherEdge.toId == edge.fromId) { hasReverse = true; break; }
                     }
-
-                    // Push the line 12 pixels to the "right" so they don't overlap
                     if (hasReverse) {
                         float offset = 12.0f;
-                        float nx = -dirY; // Perpendicular Normal
-                        float ny = dirX;
-
+                        float nx = -dirY; float ny = dirX;
                         start.x += nx * offset; start.y += ny * offset;
                         end.x += nx * offset;   end.y += ny * offset;
-
-                        // Recalculate the direction after the shift
                         dx = end.x - start.x; dy = end.y - start.y;
                         length = std::sqrt(dx*dx + dy*dy);
                         dirX = dx / length; dirY = dy / length;
                     }
                 }
 
-                // Stop the line exactly at the edge of the node circles (radius 26)
-                Vector2 drawStart = { start.x + dirX * 26.0f, start.y + dirY * 26.0f };
-                Vector2 drawEnd = { end.x - dirX * 26.0f, end.y - dirY * 26.0f };
+                // Stop edge at dynamic node radius
+                Vector2 drawStart = { start.x + dirX * config.nodeRadius, start.y + dirY * config.nodeRadius };
+                Vector2 drawEnd = { end.x - dirX * config.nodeRadius, end.y - dirY * config.nodeRadius };
 
-                DrawLineEx(drawStart, drawEnd, 4.0f, edge.color);
+                Color currentEdgeCol = edge.color;
+                // If it is the default DARKGRAY, swap it for our palette-friendly edge color
+                if (currentEdgeCol.r == DARKGRAY.r && currentEdgeCol.g == DARKGRAY.g && currentEdgeCol.b == DARKGRAY.b) {
+                    currentEdgeCol = defaultEdgeCol;
+                }
+                // Draw Dynamic Edge
+                DrawLineEx(drawStart, drawEnd, config.edgeThickness, currentEdgeCol);
 
-                // 🌟 ARROWHEAD: Draw a triangle at the end of the line
                 if (state.isDirected) {
-                    float arrowSize = 14.0f;
+                    float arrowSize = 14.0f + (config.edgeThickness * 0.5f);
                     Vector2 p1 = drawEnd;
-                    Vector2 p2 = { drawEnd.x - dirX * arrowSize - dirY * (arrowSize * 0.6f),
-                                   drawEnd.y - dirY * arrowSize + dirX * (arrowSize * 0.6f) };
-                    Vector2 p3 = { drawEnd.x - dirX * arrowSize + dirY * (arrowSize * 0.6f),
-                                   drawEnd.y - dirY * arrowSize - dirX * (arrowSize * 0.6f) };
-
-                    // The Fix: Draw both winding orders to defeat Raylib's backface culling!
+                    Vector2 p2 = { drawEnd.x - dirX * arrowSize - dirY * (arrowSize * 0.6f), drawEnd.y - dirY * arrowSize + dirX * (arrowSize * 0.6f) };
+                    Vector2 p3 = { drawEnd.x - dirX * arrowSize + dirY * (arrowSize * 0.6f), drawEnd.y - dirY * arrowSize - dirX * (arrowSize * 0.6f) };
                     DrawTriangle(p1, p2, p3, edge.color);
                     DrawTriangle(p1, p3, p2, edge.color);
                 }
 
-                // 🌟 WEIGHT TEXT (Hovering cleanly above the shifted edge)
                 if (edge.weight != 0) {
-                    float midX = (start.x + end.x) / 2.0f;
-                    float midY = (start.y + end.y) / 2.0f;
-
-                    float nx = -dy / length;
-                    float ny = dx / length;
+                    float midX = (start.x + end.x) / 2.0f; float midY = (start.y + end.y) / 2.0f;
+                    float nx = -dy / length; float ny = dx / length;
                     if (ny > 0) { nx = -nx; ny = -ny; }
 
-                    float offsetAmount = 20.0f;
-                    float weightX = midX + nx * offsetAmount;
-                    float weightY = midY + ny * offsetAmount;
-
+                    float weightX = midX + nx * 20.0f; float weightY = midY + ny * 20.0f;
                     std::string weightText = std::to_string(edge.weight);
-                    int textWidth = MeasureText(weightText.c_str(), 18);
-
-                    DrawText(weightText.c_str(), weightX - textWidth/2, weightY - 9, 18, RED);
+                    int tw = MeasureText(weightText.c_str(), config.textSize);
+                    DrawText(weightText.c_str(), weightX - tw/2, weightY - (config.textSize/2), config.textSize, RED);
                 }
             }
         }
 
-        // 2. Draw Nodes
+        // 2. Draw Nodes (🌟 NEW HOLLOW STYLE)
         for (const auto& node : state.nodes) {
-            DrawCircle(node.drawX, node.drawY, 28, BLACK);
-            DrawCircle(node.drawX, node.drawY, 26, node.color);
+            Color currentBorder = node.color;
 
-            // 🌟 NEW: Draw a Red Ring if the node is PINNED (isFixed)
-            if (node.highlightIndex == 1) {
-                DrawCircleLines(node.drawX, node.drawY, 22, RED);
-                DrawCircleLines(node.drawX, node.drawY, 21, RED);
+            // If the algorithm isn't highlighting it (it's default BLUE), use our palette!
+            if (currentBorder.r == BLUE.r && currentBorder.g == BLUE.g && currentBorder.b == BLUE.b) {
+                currentBorder = defaultBorderCol;
             }
 
+            // 🌟 THE FIX: If Pinned, just change the main border color, no extra rings!
+            if (node.highlightIndex == 1) {
+                currentBorder = RED; // Use bright red to clearly show it's locked
+            }
+
+            // Outer colored border (The highlight!)
+            DrawCircle(node.drawX, node.drawY, config.nodeRadius, currentBorder);
+
+            // Inner constant background
+            DrawCircle(node.drawX, node.drawY, config.nodeRadius - config.edgeThickness, nodeBgCol);
+
             std::string text = std::to_string(node.data);
-            int textWidth = MeasureText(text.c_str(), 20);
-            DrawText(text.c_str(), node.drawX - textWidth/2, node.drawY - 10, 20, WHITE);
+            int tw = MeasureText(text.c_str(), config.textSize);
+            DrawText(text.c_str(), node.drawX - tw/2, node.drawY - (config.textSize/2), config.textSize, textCol);
         }
 
         DrawText(state.message.c_str(), 20, 20, 25, BLACK);

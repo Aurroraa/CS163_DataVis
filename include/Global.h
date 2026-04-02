@@ -35,6 +35,13 @@ struct VisualEdge {
     bool isDirected;
 };
 
+struct UIConfig {
+    bool isDarkMode = false;
+    float nodeRadius = 26.0f;
+    float edgeThickness = 4.0f;
+    float textSize = 20.0f;
+};
+
 // 2. The Animation State
 // This struct holds EVERYTHING needed to draw the screen at one specific moment.
 struct AnimationState {

@@ -17,6 +17,9 @@ private:
     char textEditorBuffer[2048] = {0};
     std::string lastText = "";
 
+    UIConfig config;
+    bool isSettingsOpen = false;
+
     float playbackSpeed = 0.5f;
 
     // The Bottom Toolbar
@@ -31,6 +34,7 @@ private:
 
     void DrawPseudocode();
     void DrawPlayback();
+    void DrawSettingsModal();
 
 public:
     GraphState();

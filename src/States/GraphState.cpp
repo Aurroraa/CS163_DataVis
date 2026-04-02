@@ -95,20 +95,28 @@ void GraphState::Update() {
 void GraphState::Draw() {
     float canvasStartX = 260.0f;
     float canvasHeight = GetScreenHeight() - 200.0f;
-    DrawRectangle(canvasStartX, 0, GetScreenWidth() - canvasStartX, canvasHeight, RAYWHITE);
+
+    // --- 🌟 EXTRACT EXACT PALETTE COLORS ---
+    Color canvasBg = config.isDarkMode ? Color{35, 41, 49, 255} : Color{250, 250, 250, 255};
+    Color panelBg = config.isDarkMode ? Color{57, 62, 70, 255} : Color{245, 232, 232, 255};
+    Color textCol = config.isDarkMode ? Color{226, 215, 193, 255} : Color{40, 40, 40, 255};
+    Color outlineCol = config.isDarkMode ? Color{162, 151, 137, 255} : Color{238, 217, 217, 255};
+
+    DrawRectangle(canvasStartX, 0, GetScreenWidth() - canvasStartX, canvasHeight, canvasBg);
     Visualizer::Instance().DrawCanvas();
 
-    DrawRectangle(0, 0, 260, canvasHeight, {245, 245, 245, 255});
-    DrawLine(260, 0, 260, canvasHeight, DARKGRAY);
+    DrawRectangle(0, 0, 260, canvasHeight, panelBg);
+    DrawLine(260, 0, 260, canvasHeight, outlineCol);
 
+    // 🌟 BIGGER DIRECTED GRAPH CHECKBOX (24x24 instead of 20x20, and shifted down)
     bool prevDirected = isDirected;
-    GuiCheckBox((Rectangle){10, 10, 20, 20}, "Directed Graph", &isDirected);
+    GuiCheckBox((Rectangle){15, 15, 24, 24}, " Directed Graph", &isDirected);
     if (isDirected != prevDirected) {
         Visualizer::Instance().ClearHistory();
         graph.initFromLiveText(std::string(textEditorBuffer), isDirected, canvasStartX, 0, GetScreenWidth()-canvasStartX, canvasHeight);
     }
 
-    DrawText("Graph Data:", 10, 45, 20, BLACK);
+    DrawText("Graph Data:", 10, 45, 20, textCol);
 
     // 🌟 ADVANCED MULTI-LINE TEXT BOX WITH CURSOR & CLIPBOARD
     Rectangle textBoxRect = { 0, 70, 260, canvasHeight - 70.0f };
@@ -223,7 +231,7 @@ void GraphState::Draw() {
             DrawRectangle(gutterRect.width, lineY, textBoxRect.width - gutterRect.width, 22, {240, 245, 255, 255});
         }
 
-        DrawText(lines[i].c_str(), gutterRect.width + 10, lineY + 2, 18, BLACK);
+        DrawText(lines[i].c_str(), gutterRect.width + 10, lineY + 2, 18, textCol);
 
         // 🌟 CALCULATE MOUSE CLICK INDEX
         if (clicked && isEditorActive && CheckCollisionPointRec(mousePos, textBoxRect)) {
@@ -261,27 +269,95 @@ void GraphState::Draw() {
 
     // Draw Blinking Cursor exactly where it belongs!
     if (isEditorActive && !selectAll && (int)(GetTime() * 2) % 2 == 0) {
-        DrawLine(cursorPixelX, cursorPixelY + 2, cursorPixelX, cursorPixelY + 20, BLACK);
+        DrawLine(cursorPixelX, cursorPixelY + 2, cursorPixelX, cursorPixelY + 20, textCol);
     }
 
-    // ... [KEEP YOUR EXISTING HOME BUTTON & RENDERER CALLS EXACTLY THE SAME] ...
-    if (GuiButton((Rectangle){(float)GetScreenWidth() - 100, 10, 80, 30}, "Home")) {
+    // 🌟 CUSTOM EYE-CATCHING HOME BUTTON
+    float btnX = GetScreenWidth() - 150;
+    float homeBtnX = btnX - 110;
+    Rectangle homeRect = {homeBtnX, 10, 90, 36};
+    bool hoverHome = CheckCollisionPointRec(mousePos, homeRect);
+
+    // Draw rounded background (Accent color if hovered)
+    Color homeBg = hoverHome ? (config.isDarkMode ? Color{162, 151, 137, 255} : Color{242, 182, 182, 255}) : Fade(textCol, 0.1f);
+    DrawRectangleRounded(homeRect, 0.5f, 8, homeBg);
+    DrawRectangleRoundedLines(homeRect, 0.5f, 8, textCol);
+
+    int textW = MeasureText("Home", 18);
+    DrawText("Home", homeRect.x + homeRect.width/2 - textW/2, homeRect.y + 10, 18, hoverHome ? (config.isDarkMode ? BLACK : WHITE) : textCol);
+
+    if (hoverHome && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
         g_App->ChangeState(new SelectState());
     }
 
-    GraphRenderer::Draw(Visualizer::Instance().GetRenderState());
+    GraphRenderer::Draw(Visualizer::Instance().GetRenderState(), config);
     DrawToolbar();
+    DrawPseudocode();
+    DrawPlayback();
+
+    btnX = GetScreenWidth() - 150;
+    Rectangle burgerRect = {btnX, 10, 40, 30};
+    // Check for click manually to avoid the ugly grey button background!
+    mousePos = GetMousePosition();
+    bool isHoveringBurger = CheckCollisionPointRec(mousePos, burgerRect);
+
+    if (isHoveringBurger && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        isSettingsOpen = !isSettingsOpen;
+    }
+
+    // Draw a subtle background ONLY when hovering for a nice UX feel
+    if (isHoveringBurger) {
+        DrawRectangleRounded(burgerRect, 0.2f, 4, config.isDarkMode ? Color{80, 85, 95, 255} : Color{220, 220, 220, 255});
+    }
+
+    // Draw the 3 smooth rounded lines perfectly centered
+    DrawRectangleRounded({btnX + 8, 14, 24, 4}, 1.0f, 4, textCol);
+    DrawRectangleRounded({btnX + 8, 23, 24, 4}, 1.0f, 4, textCol);
+    DrawRectangleRounded({btnX + 8, 32, 24, 4}, 1.0f, 4, textCol);
+
+    // Render Modal last so it draws on top!
+    if (isSettingsOpen) DrawSettingsModal();
 }
 
 void GraphState::DrawToolbar() {
+    Color panelBg = config.isDarkMode ? Color{57, 62, 70, 255} : Color{245, 232, 232, 255};
+    Color outlineCol = config.isDarkMode ? Color{162, 151, 137, 255} : Color{238, 217, 217, 255};
+    Color textCol = config.isDarkMode ? Color{226, 215, 193, 255} : Color{40, 40, 40, 255};
+
+    // Accent colors for primary actions
+    Color primaryBg = config.isDarkMode ? Color{162, 151, 137, 255} : Color{242, 182, 182, 255};
+    Color primaryHover = ColorBrightness(primaryBg, 0.2f); // Built-in raygui color brightness
+
     float startY = GetScreenHeight() - 200;
-    DrawRectangle(0, startY, GetScreenWidth(), 200, LIGHTGRAY);
-    DrawLine(0, startY, GetScreenWidth(), startY, DARKGRAY);
+    DrawRectangle(0, startY, GetScreenWidth(), 200, panelBg);
+    DrawLine(0, startY, GetScreenWidth(), startY, outlineCol);
 
-    float x = 20; float y = startY + 20;
+    // 🌟 HELPER: BEAUTIFUL CUSTOM ROUNDED BUTTON
+    auto DrawModernBtn = [&](Rectangle rect, const char* text, bool isPrimary) -> bool {
+        Vector2 mouse = GetMousePosition();
+        bool isHovering = CheckCollisionPointRec(mouse, rect);
 
-    // --- ALGORITHM BUTTONS ---
-    if (GuiButton((Rectangle){x, y, 200, 40}, "Run Minimum Spanning Tree")) {
+        Color bg = Fade(textCol, 0.05f); // Default subtle background
+        if (isPrimary) bg = isHovering ? Fade(primaryBg, 0.8f) : primaryBg;
+        else if (isHovering) bg = Fade(textCol, 0.15f);
+
+        DrawRectangleRounded(rect, 0.4f, 8, bg);
+        DrawRectangleRoundedLines(rect, 0.4f, 8, isPrimary ? bg : outlineCol);
+
+        Color labelCol = isPrimary ? (config.isDarkMode ? BLACK : WHITE) : textCol;
+        int tw = MeasureText(text, 18);
+        DrawText(text, rect.x + rect.width/2 - tw/2, rect.y + rect.height/2 - 9, 18, labelCol);
+
+        return isHovering && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
+    };
+
+    float x = 30; float y = startY + 25;
+
+    // --- 🚀 ALGORITHM GROUP (LEFT SIDE) ---
+    DrawText("Algorithms", x, y, 20, textCol);
+    DrawLine(x, y + 25, x + 250, y + 25, outlineCol);
+
+    if (DrawModernBtn({x, y + 40, 250, 40}, "Run Kruskal (MST)", true)) {
         isAlgorithmActive = true;
         Visualizer::Instance().ClearHistory();
         graph.runKruskalMST();
@@ -289,20 +365,16 @@ void GraphState::DrawToolbar() {
         Visualizer::Instance().SetPlaying(true);
     }
 
-    DrawText("Source:", x, y + 80, 18, BLACK);
-    if (GuiTextBox((Rectangle){x + 80, y + 70, 40, 40}, dijkstraSourceBuffer, 16, isDijkstraSourceActive)) {
+    DrawText("Src:", x + 5, y + 105, 18, textCol);
+    if (GuiTextBox((Rectangle){x + 45, y + 95, 40, 40}, dijkstraSourceBuffer, 16, isDijkstraSourceActive)) {
         isDijkstraSourceActive = !isDijkstraSourceActive;
     }
 
-    if (GuiButton((Rectangle){x + 130, y + 70, 120, 40}, "Run Dijkstra")) {
+    if (DrawModernBtn({x + 95, y + 95, 155, 40}, "Run Dijkstra", true)) {
         int startNode = -1;
-
-        // Use the text box if they typed something, otherwise fallback to the first node
         if (dijkstraSourceBuffer[0] != '\0') {
             try { startNode = std::stoi(dijkstraSourceBuffer); } catch (...) {}
-        } else {
-            startNode = graph.getFirstVertexId();
-        }
+        } else startNode = graph.getFirstVertexId();
 
         if (startNode != -1) {
             isAlgorithmActive = true;
@@ -313,59 +385,49 @@ void GraphState::DrawToolbar() {
         }
     }
 
-    // --- UTILITY BUTTONS ---
-    if (GuiButton((Rectangle){x + 230, y, 120, 40}, "Clear Screen")) {
+    // --- 🛠️ UTILITY GROUP (RIGHT SIDE) ---
+    float rx = 320;
+    DrawText("Sandbox Tools", rx, y, 20, textCol);
+    DrawLine(rx, y + 25, rx + 400, y + 25, outlineCol);
+
+    if (DrawModernBtn({rx, y + 40, 120, 40}, "Random", false)) {
+        std::string randomGraph = "";
+        int numNodes = GetRandomValue(4, 7);
+        int numEdges = GetRandomValue(numNodes, numNodes * 2);
+        for (int i = 0; i < numEdges; i++) {
+            int u = GetRandomValue(1, numNodes); int v = GetRandomValue(1, numNodes);
+            while (u == v) v = GetRandomValue(1, numNodes);
+            randomGraph += std::to_string(u) + " " + std::to_string(v) + " " + std::to_string(GetRandomValue(1, 99)) + "\n";
+        }
+        strncpy(textEditorBuffer, randomGraph.c_str(), 2047);
+        textEditorBuffer[2047] = '\0';
+    }
+
+    if (DrawModernBtn({rx + 130, y + 40, 120, 40}, "Load File", false)) {
+        const char *filterPatterns[1] = { "*.txt" };
+        const char *filePath = tinyfd_openFileDialog("Select Edge List File", "", 1, filterPatterns, "Text Files", 0);
+        if (filePath != NULL) {
+            std::ifstream file(filePath);
+            if (file.is_open()) {
+                std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+                strncpy(textEditorBuffer, content.c_str(), 2047);
+                textEditorBuffer[2047] = '\0';
+                file.close();
+            }
+        }
+    }
+
+    if (DrawModernBtn({rx, y + 95, 250, 40}, "Clear Screen", false)) {
         isAlgorithmActive = false;
         Visualizer::Instance().ClearHistory();
         graph.clear();
         textEditorBuffer[0] = '\0';
     }
-
-    // 🌟 NEW: LOAD FILE BUTTON
-    if (GuiButton((Rectangle){x + 530, y, 120, 40}, "Load File...")) {
-        const char *filterPatterns[1] = { "*.txt" };
-        const char *filePath = tinyfd_openFileDialog("Select Edge List File", "", 1, filterPatterns, "Text Files", 0);
-
-        if (filePath != NULL) {
-            std::ifstream file(filePath);
-            if (file.is_open()) {
-                std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-
-                strncpy(textEditorBuffer, content.c_str(), 2047);
-                textEditorBuffer[2047] = '\0';
-
-                file.close();
-
-            }
-        }
-    }
-    if (GuiButton((Rectangle){x + 380, y, 120, 40}, "Random")) {
-        std::string randomGraph = "";
-        int numNodes = GetRandomValue(4, 7); // 4 to 7 nodes so it isn't too cluttered
-        int numEdges = GetRandomValue(numNodes, numNodes * 2);
-
-        for (int i = 0; i < numEdges; i++) {
-            int u = GetRandomValue(1, numNodes);
-            int v = GetRandomValue(1, numNodes);
-
-            // Prevent self-loops
-            while (u == v) {
-                v = GetRandomValue(1, numNodes);
-            }
-
-            int w = GetRandomValue(1, 99); // Random weight
-
-            randomGraph += std::to_string(u) + " " + std::to_string(v) + " " + std::to_string(w) + "\n";
-        }
-
-        // Dump the generated text into the UI buffer!
-        strncpy(textEditorBuffer, randomGraph.c_str(), 2047);
-        textEditorBuffer[2047] = '\0';
-
-    }
 }
 
 void GraphState::DrawPlayback() {
+    Color textCol = config.isDarkMode ? Color{226, 215, 193, 255} : Color{40, 40, 40, 255};
+
     int centerX = GetScreenWidth() / 2;
     int y = GetScreenHeight() - 240; // Floating perfectly above the bottom toolbar
 
@@ -378,7 +440,7 @@ void GraphState::DrawPlayback() {
     if (GuiButton((Rectangle){(float)centerX + 50, (float)y, 40, 30}, ">")) Visualizer::Instance().NextStep();
     if (GuiButton((Rectangle){(float)centerX + 100, (float)y, 40, 30}, ">>")) Visualizer::Instance().GoToEnd();
 
-    DrawText("Speed:", centerX + 220, y + 5, 20, BLACK);
+    DrawText("Speed:", centerX + 220, y + 5, 20, textCol);
     GuiSlider((Rectangle){(float)centerX + 350, (float)y, 100, 30}, "Fast", "Slow", &playbackSpeed, 0.1f, 2.0f);
     Visualizer::Instance().SetSpeed(playbackSpeed);
 }
@@ -389,25 +451,62 @@ void GraphState::DrawPseudocode() {
     int startX = GetScreenWidth() - panelW;
     int startY = GetScreenHeight() - 200;
 
-    // Background
-    DrawRectangle(startX, startY, panelW, panelH, Fade(BLACK, 0.8f));
-    DrawRectangleLines(startX, startY, panelW, panelH, GRAY);
-    DrawText("Pseudocode", startX + 10, startY + 10, 20, WHITE);
+    // 🌟 USE DYNAMIC THEME COLORS INSTEAD OF BLACK
+    Color panelBg = config.isDarkMode ? Color{45, 50, 60, 255} : Color{240, 225, 225, 255};
+    Color outlineCol = config.isDarkMode ? Color{162, 151, 137, 255} : Color{238, 217, 217, 255};
+    Color textCol = config.isDarkMode ? Color{226, 215, 193, 255} : Color{40, 40, 40, 255};
 
-    // Get Data
+    DrawRectangle(startX, startY, panelW, panelH, panelBg);
+    DrawRectangleLines(startX, startY, panelW, panelH, outlineCol);
+    DrawText("Pseudocode", startX + 15, startY + 15, 20, textCol);
+    DrawLine(startX, startY + 45, startX + panelW, startY + 45, outlineCol);
+
     const AnimationState& state = Visualizer::Instance().GetCurrentState();
     if (state.codeText.empty()) return;
 
-    // Draw Lines
-    int y = startY + 40;
+    int y = startY + 55;
     for (int i = 0; i < state.codeText.size(); i++) {
         if (i == state.codeLineIndex) {
-            DrawRectangle(startX, y - 2, panelW, 25, BLACK);
-            DrawText(state.codeText[i].c_str(), startX + 10, y, 20, YELLOW);
+            // Highlight active line
+            DrawRectangle(startX, y - 2, panelW, 25, config.isDarkMode ? Color{80, 85, 95, 255} : Color{220, 190, 190, 255});
+            DrawText(state.codeText[i].c_str(), startX + 15, y, 20, textCol);
         } else {
-            DrawText(state.codeText[i].c_str(), startX + 10, y, 20, LIGHTGRAY);
+            // Dim inactive lines
+            DrawText(state.codeText[i].c_str(), startX + 15, y, 20, Fade(textCol, 0.5f));
         }
         y += 25;
     }
 }
 
+void GraphState::DrawSettingsModal() {
+    // 🌟 INCREASED SIZE
+    float width = 400; float height = 340;
+    float startX = GetScreenWidth() / 2 - width / 2;
+    float startY = GetScreenHeight() / 2 - height / 2;
+
+    Color modalBg = config.isDarkMode ? Color{57, 62, 70, 255} : Color{251, 239, 239, 255};
+    Color textCol = config.isDarkMode ? Color{223, 208, 184, 255} : BLACK;
+
+    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), {0, 0, 0, 150});
+    DrawRectangle(startX, startY, width, height, modalBg);
+    DrawRectangleLines(startX, startY, width, height, DARKGRAY);
+
+    DrawText("Visual Settings", startX + 120, startY + 20, 22, textCol);
+    DrawLine(startX + 20, startY + 55, startX + width - 20, startY + 55, GRAY);
+
+    // 🌟 INCREASED SPACING
+    GuiCheckBox((Rectangle){startX + 30, startY + 80, 24, 24}, " Dark Mode", &config.isDarkMode);
+
+    DrawText("Node Radius", startX + 30, startY + 130, 18, textCol);
+    GuiSliderBar((Rectangle){startX + 160, startY + 130, 180, 20}, NULL, NULL, &config.nodeRadius, 15.0f, 40.0f);
+
+    DrawText("Edge Width", startX + 30, startY + 180, 18, textCol);
+    GuiSliderBar((Rectangle){startX + 160, startY + 180, 180, 20}, NULL, NULL, &config.edgeThickness, 1.0f, 10.0f);
+
+    DrawText("Text Size", startX + 30, startY + 230, 18, textCol);
+    GuiSliderBar((Rectangle){startX + 160, startY + 230, 180, 20}, NULL, NULL, &config.textSize, 12.0f, 30.0f);
+
+    if (GuiButton((Rectangle){startX + width / 2 - 50, startY + 285, 100, 35}, "Close")) {
+        isSettingsOpen = false;
+    }
+}

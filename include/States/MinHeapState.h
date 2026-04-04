@@ -1,6 +1,8 @@
 #pragma once
 #include "State.h"
 #include "../DataStructures/MinHeap.h"
+#include "Global.h"
+#include "UIHelper.h"
 
 class MinHeapState : public State {
 private:
@@ -37,6 +39,10 @@ private:
 
     void DrawPseudocode();
     void DrawPlayback();
+
+    UIConfig config;
+    bool isSettingsOpen = false;
+    void DrawSettingsModal();
 
 public:
     MinHeapState();

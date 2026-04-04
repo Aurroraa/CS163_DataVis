@@ -80,44 +80,53 @@ namespace DLLRenderer {
     // ---------------------------------------------------------
     // MAIN DRAW LOOP
     // ---------------------------------------------------------
-    void Draw(const AnimationState& state) {
+    // ---------------------------------------------------------
+    // MAIN DRAW LOOP
+    // ---------------------------------------------------------
+    void Draw(const AnimationState& state, const UIConfig& config) {
         if (state.nodes.empty()) return;
 
-        // 1. Draw Arrows
+        // 🌟 1. GRAB THEME COLORS
+        Color textCol = config.isDarkMode ? Color{226, 215, 193, 255} : Color{40, 40, 40, 255};
+        Color nodeBgCol = config.isDarkMode ? Color{35, 41, 49, 255} : Color{250, 250, 250, 255};
+        Color defaultBorderCol = config.isDarkMode ? Color{162, 151, 137, 255} : Color{242, 182, 182, 255};
+
+        // 2. Draw Arrows
         for (const auto& node : state.nodes) {
-            // NEXT Arrow (BLACK)
+            // NEXT Arrow (Solid Theme Color)
             if (node.nextNodeIndex != -1 && node.nextNodeIndex < state.nodes.size()) {
                 const auto& target = state.nodes[node.nextNodeIndex];
-                DrawArrowStyle({node.x, node.y}, {target.x, target.y}, BLACK, false);
+                DrawArrowStyle({node.x, node.y}, {target.x, target.y}, textCol, false);
             }
 
-            // PREV Arrow (GRAY - Subtle)
+            // PREV Arrow (Faded Theme Color)
             if (node.prevNodeIndex != -1 && node.prevNodeIndex < state.nodes.size()) {
                 const auto& target = state.nodes[node.prevNodeIndex];
-                DrawArrowStyle({node.x, node.y}, {target.x, target.y}, GRAY, true);
+                DrawArrowStyle({node.x, node.y}, {target.x, target.y}, Fade(textCol, 0.3f), true);
             }
         }
 
-        // 2. Draw Nodes
+        // 3. Draw Nodes (HOLLOW STYLE)
         for (const auto& node : state.nodes) {
-            DrawCircle(node.drawX, node.drawY, 32, BLACK);
+            Color currentBorder = node.color;
+            if (currentBorder.r == BLUE.r && currentBorder.g == BLUE.g && currentBorder.b == BLUE.b) {
+                currentBorder = defaultBorderCol;
+            }
 
-            // 🐛 FIX 1: Use node.color instead of RAYWHITE so animations show up!
-            DrawCircle(node.drawX, node.drawY, 30, node.color);
-            DrawCircleLines(node.drawX, node.drawY, 30, BLACK);
+            // Outer Border
+            DrawCircle(node.drawX, node.drawY, config.nodeRadius, currentBorder);
+            // Inner Background
+            DrawCircle(node.drawX, node.drawY, config.nodeRadius - config.edgeThickness, nodeBgCol);
 
             std::string text = std::to_string(node.data);
-            int textWidth = MeasureText(text.c_str(), 20);
+            int textWidth = MeasureText(text.c_str(), config.textSize);
+            DrawText(text.c_str(), node.drawX - textWidth / 2, node.drawY - (config.textSize/2), config.textSize, textCol);
 
-            // 🐛 FIX 2: White text contrasts better against colored nodes
-            DrawText(text.c_str(), node. drawX- textWidth / 2, node.drawY - 10, 20, WHITE);
-
-            // Draw Index (Slightly larger and Red to match your Heap style)
-            DrawText(TextFormat("%d", node.id), node.drawX - 5, node.drawY + 35, 15, RED);
+            // Index Text
+            DrawText(TextFormat("%d", node.id), node.drawX - 5, node.drawY + config.nodeRadius + 5, 16, currentBorder);
         }
 
-        // Draw Message
-        DrawText(state.message.c_str(), 20, 20, 25, BLACK);
+        DrawText(state.message.c_str(), 20, 20, 25, textCol);
     }
 
 } // End of namespace DLLRenderer

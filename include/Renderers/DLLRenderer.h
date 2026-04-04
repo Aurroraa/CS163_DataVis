@@ -3,5 +3,5 @@
 
 namespace DLLRenderer {
     // The only function we need: Draw the current state to the screen
-    void Draw(const AnimationState& state);
+    void Draw(const AnimationState& state, const UIConfig& config);
 }

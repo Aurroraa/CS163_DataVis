@@ -198,9 +198,16 @@ void GraphState::Draw() {
     }
 
     // --- DRAWING & MOUSE MAPPING ---
-    DrawRectangleRec(textBoxRect, selectAll ? Color{220, 235, 255, 255} : WHITE); // Light blue if Ctrl+A
+    Color editorBg = config.isDarkMode ? Color{45, 50, 60, 255} : WHITE;
+    Color editorSelectBg = config.isDarkMode ? Color{70, 90, 120, 255} : Color{220, 235, 255, 255};
+    Color gutterBg = config.isDarkMode ? Color{35, 41, 49, 255} : Color{230, 230, 230, 255};
+    Color gutterText = config.isDarkMode ? Fade(textCol, 0.5f) : DARKGRAY;
+    Color activeLineBg = config.isDarkMode ? Color{65, 70, 80, 255} : Color{240, 245, 255, 255};
+
+    // 🌟 2. APPLY THE BACKGROUNDS
+    DrawRectangleRec(textBoxRect, selectAll ? editorSelectBg : editorBg);
     Rectangle gutterRect = {textBoxRect.x, textBoxRect.y, 40, textBoxRect.height};
-    DrawRectangleRec(gutterRect, {230, 230, 230, 255});
+    DrawRectangleRec(gutterRect, gutterBg);
 
     // Parse lines to draw them individually
     std::vector<std::string> lines;
@@ -228,7 +235,9 @@ void GraphState::Draw() {
 
         // Active line highlight
         if (!selectAll && isEditorActive && cursorPos >= charCounter && cursorPos <= charCounter + lines[i].length()) {
-            DrawRectangle(gutterRect.width, lineY, textBoxRect.width - gutterRect.width, 22, {240, 245, 255, 255});
+            // 🌟 THE FIX: Adapt the highlight to Dark Mode!
+            Color activeLineBg = config.isDarkMode ? Color{65, 70, 80, 255} : Color{240, 245, 255, 255};
+            DrawRectangle(gutterRect.width, lineY, textBoxRect.width - gutterRect.width, 22, activeLineBg);
         }
 
         DrawText(lines[i].c_str(), gutterRect.width + 10, lineY + 2, 18, textCol);
@@ -427,21 +436,44 @@ void GraphState::DrawToolbar() {
 
 void GraphState::DrawPlayback() {
     Color textCol = config.isDarkMode ? Color{226, 215, 193, 255} : Color{40, 40, 40, 255};
+    Color panelBg = config.isDarkMode ? Color{57, 62, 70, 230} : Color{245, 232, 232, 230};
+    Color outlineCol = config.isDarkMode ? Color{162, 151, 137, 255} : Color{238, 217, 217, 255};
 
     int centerX = GetScreenWidth() / 2;
-    int y = GetScreenHeight() - 240; // Floating perfectly above the bottom toolbar
+    int y = GetScreenHeight() - 240;
 
-    if (GuiButton((Rectangle){(float)centerX - 100, (float)y, 40, 30}, "<<")) Visualizer::Instance().GoToStart();
-    if (GuiButton((Rectangle){(float)centerX - 50, (float)y, 40, 30}, "<")) Visualizer::Instance().PrevStep();
+    // Draw the floating pill background
+    Rectangle playbackRect = {(float)centerX - 120, (float)y - 10, 560, 50};
+    DrawRectangleRounded(playbackRect, 0.5f, 10, panelBg);
+    DrawRectangleRoundedLines(playbackRect, 0.5f, 10, outlineCol);
+
+    // 🌟 HELPER: Mini Modern Button for Playback
+    auto DrawMiniBtn = [&](Rectangle rect, const char* text) -> bool {
+        Vector2 mouse = GetMousePosition();
+        bool isHovering = CheckCollisionPointRec(mouse, rect);
+
+        Color bg = isHovering ? Fade(textCol, 0.15f) : Fade(textCol, 0.05f);
+        DrawRectangleRounded(rect, 0.4f, 8, bg);
+        DrawRectangleRoundedLines(rect, 0.4f, 8, outlineCol);
+
+        int tw = MeasureText(text, 18);
+        DrawText(text, rect.x + rect.width/2 - tw/2, rect.y + rect.height/2 - 9, 18, textCol);
+
+        return isHovering && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
+    };
+
+    // 🌟 REPLACE GuiButton with DrawMiniBtn!
+    if (DrawMiniBtn({(float)centerX - 100, (float)y, 40, 30}, "<<")) Visualizer::Instance().GoToStart();
+    if (DrawMiniBtn({(float)centerX - 50, (float)y, 40, 30}, "<")) Visualizer::Instance().PrevStep();
 
     const char* label = Visualizer::Instance().IsPlaying() ? "||" : ">";
-    if (GuiButton((Rectangle){(float)centerX, (float)y, 40, 30}, label)) Visualizer::Instance().TogglePlay();
+    if (DrawMiniBtn({(float)centerX, (float)y, 40, 30}, label)) Visualizer::Instance().TogglePlay();
 
-    if (GuiButton((Rectangle){(float)centerX + 50, (float)y, 40, 30}, ">")) Visualizer::Instance().NextStep();
-    if (GuiButton((Rectangle){(float)centerX + 100, (float)y, 40, 30}, ">>")) Visualizer::Instance().GoToEnd();
+    if (DrawMiniBtn({(float)centerX + 50, (float)y, 40, 30}, ">")) Visualizer::Instance().NextStep();
+    if (DrawMiniBtn({(float)centerX + 100, (float)y, 40, 30}, ">>")) Visualizer::Instance().GoToEnd();
 
-    DrawText("Speed:", centerX + 220, y + 5, 20, textCol);
-    GuiSlider((Rectangle){(float)centerX + 350, (float)y, 100, 30}, "Fast", "Slow", &playbackSpeed, 0.1f, 2.0f);
+    // Speed Slider
+    UIHelper::DrawModernSlider({(float)centerX + 265, (float)y, 110, 30}, "Fast", "Slow", &playbackSpeed, 0.1f, 2.0f, config);
     Visualizer::Instance().SetSpeed(playbackSpeed);
 }
 

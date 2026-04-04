@@ -1,6 +1,8 @@
 #pragma once
 #include "State.h"
 #include "../DataStructures/Trie.h"
+#include "Global.h"
+#include "UIHelper.h"
 
 class TrieState : public State {
 private:
@@ -40,6 +42,10 @@ private:
 
     void DrawPseudocode();
     void DrawPlayback();
+
+    UIConfig config;
+    bool isSettingsOpen = false;
+    void DrawSettingsModal();
 
 public:
     TrieState();

@@ -62,6 +62,7 @@ add_executable(CS163_DataVis
         src/Renderers/GraphRenderer.cpp
         include/States/GraphState.h
         src/States/GraphState.cpp
+        include/UIHelper.h
 )
 
 # --- 3. Link Raylib to your app ---

@@ -1,5 +1,7 @@
 #pragma once
 #include "State.h"
+#include "Global.h"
+#include "UIHelper.h"
 #include "../DataStructures/DoublyLinkedList.h"
 
 class DLLState : public State {
@@ -37,6 +39,10 @@ private:
 
     void DrawPseudocode();
     void DrawPlayback();
+
+    UIConfig config;
+    bool isSettingsOpen = false;
+    void DrawSettingsModal();
 
 public:
     DLLState();

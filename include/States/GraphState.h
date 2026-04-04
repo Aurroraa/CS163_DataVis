@@ -1,5 +1,7 @@
 #pragma once
 #include "State.h"
+#include "Global.h"
+#include "UIHelper.h"
 #include "../DataStructures/Graph.h"
 
 class GraphState : public State {

@@ -32,61 +32,70 @@ void DLLState::Update() {
 }
 
 void DLLState::Draw() {
-    // 1. Canvas restored to float above the toolbar
-    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight() - 200, RAYWHITE);
+    // 1. Themed Canvas
+    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight() - 200, UIHelper::GetCanvasBg(config));
     Visualizer::Instance().DrawCanvas();
 
-    // 2. Navigation
-    if (GuiButton((Rectangle){(float)GetScreenWidth() - 100, 10, 80, 30}, "Home")) {
+    // 2. Custom Home Button & Hamburger Menu
+    Color textCol = UIHelper::GetTextCol(config);
+    float btnX = GetScreenWidth() - 150;
+
+    // Home Button
+    float homeBtnX = btnX - 110;
+    Rectangle homeRect = {homeBtnX, 10, 90, 36};
+    if (UIHelper::DrawModernBtn(homeRect, "Home", false, config)) {
         g_App->ChangeState(new SelectState());
     }
 
+    // Hamburger Menu
+    if (UIHelper::DrawHamburgerBtn({btnX, 10, 40, 36}, config)) isSettingsOpen = !isSettingsOpen;
+
     // 3. Draw Data Structure
-    DLLRenderer::Draw(Visualizer::Instance().GetRenderState());
+    DLLRenderer::Draw(Visualizer::Instance().GetRenderState(), config);
 
     // 4. UI Components
     DrawToolbar();
     DrawPlayback();
     DrawPseudocode();
+
+    if (isSettingsOpen) DrawSettingsModal();
 }
 
 void DLLState::DrawToolbar() {
     float startY = GetScreenHeight() - 200;
 
-    // Draw Toolbar Background
-    DrawRectangle(0, startY, GetScreenWidth(), 200, LIGHTGRAY);
-    DrawLine(0, startY, GetScreenWidth(), startY, DARKGRAY);
+    // Draw Themed Toolbar Background
+    DrawRectangle(0, startY, GetScreenWidth(), 200, UIHelper::GetPanelBg(config));
+    DrawLine(0, startY, GetScreenWidth(), startY, UIHelper::GetOutlineCol(config));
 
-    int btnWidth = 100;
-    int gap = 10;
-    float x = 20;
+    int btnWidth = 100; int gap = 10; float x = 20;
 
-    // Macro to toggle menus nicely
     #define CLOSE_ALL_MENUS() showInitMenu = showAddMenu = showDeleteMenu = showUpdateMenu = showSearchMenu = false;
 
-    // --- ROW 1: THE MAIN BUTTONS ---
-    if (GuiButton((Rectangle){x, startY + 10, (float)btnWidth, 40}, "Init")) {
+    // --- ROW 1: MAIN NAVIGATION ---
+    // Notice how we pass the 'showMenu' boolean as the 'isPrimary' flag!
+    // This makes the button light up when its menu is active!
+    if (UIHelper::DrawModernBtn({x, startY + 10, (float)btnWidth, 40}, "Init", showInitMenu, config)) {
         bool wasOpen = showInitMenu; CLOSE_ALL_MENUS(); showInitMenu = !wasOpen;
     } x += btnWidth + gap;
 
-    if (GuiButton((Rectangle){x, startY + 10, (float)btnWidth, 40}, "Add")) {
+    if (UIHelper::DrawModernBtn({x, startY + 10, (float)btnWidth, 40}, "Add", showAddMenu, config)) {
         bool wasOpen = showAddMenu; CLOSE_ALL_MENUS(); showAddMenu = !wasOpen;
     } x += btnWidth + gap;
 
-    if (GuiButton((Rectangle){x, startY + 10, (float)btnWidth, 40}, "Delete")) {
+    if (UIHelper::DrawModernBtn({x, startY + 10, (float)btnWidth, 40}, "Delete", showDeleteMenu, config)) {
         bool wasOpen = showDeleteMenu; CLOSE_ALL_MENUS(); showDeleteMenu = !wasOpen;
     } x += btnWidth + gap;
 
-    if (GuiButton((Rectangle){x, startY + 10, (float)btnWidth, 40}, "Update")) {
+    if (UIHelper::DrawModernBtn({x, startY + 10, (float)btnWidth, 40}, "Update", showUpdateMenu, config)) {
         bool wasOpen = showUpdateMenu; CLOSE_ALL_MENUS(); showUpdateMenu = !wasOpen;
     } x += btnWidth + gap;
 
-    if (GuiButton((Rectangle){x, startY + 10, (float)btnWidth, 40}, "Search")) {
+    if (UIHelper::DrawModernBtn({x, startY + 10, (float)btnWidth, 40}, "Search", showSearchMenu, config)) {
         bool wasOpen = showSearchMenu; CLOSE_ALL_MENUS(); showSearchMenu = !wasOpen;
-    } x += btnWidth + gap + 20;
+    }
 
     // --- ROW 2: THE POPUPS ---
-    // Drawn neatly inside the toolbar below the buttons!
     if (showInitMenu)   DrawInitMenu(20, startY + 60);
     if (showAddMenu)    DrawAddMenu(20, startY + 60);
     if (showDeleteMenu) DrawDeleteMenu(20, startY + 60);
@@ -98,19 +107,33 @@ void DLLState::DrawToolbar() {
 // FLATTENED POPUP SCREENS (To fit inside the 200px Toolbar)
 // ---------------------------------------------------------
 void DLLState::DrawInitMenu(float x, float y) {
-    DrawRectangle(x, y, 620, 120, RAYWHITE);
-    DrawRectangleLines(x, y, 620, 120, GRAY);
+    Color panelBg = UIHelper::GetCanvasBg(config);
+    Color outlineCol = UIHelper::GetOutlineCol(config);
+    Color textCol = UIHelper::GetTextCol(config);
 
-    // Row 1: Clear & User Input
-    if (GuiButton((Rectangle){x + 10, y + 10, 120, 30}, "Empty (Clear)")) {
+    // 🌟 WIDENED PANEL to 720, TALLER to 130
+    DrawRectangleRounded({x, y, 720.0f, 130.0f}, 0.1f, 8, panelBg);
+    DrawRectangleRoundedLines({x, y, 720.0f, 130.0f}, 0.1f, 8, outlineCol);
+
+    float fontSize = 24.0f;
+
+    // --- ROW 1 ---
+    // Button: Empty
+    if (UIHelper::DrawModernBtn({x + 15.0f, y + 15.0f, 190.0f, 40.0f}, "Empty (Clear)", true, config)) {
         Visualizer::Instance().ClearHistory();
         dll.init({});
         Visualizer::Instance().SetPlaying(false);
     }
 
-    DrawText("A =", x + 150, y + 15, 20, BLACK);
-    if (GuiTextBox((Rectangle){x + 190, y + 10, 150, 30}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
-    if (GuiButton((Rectangle){x + 350, y + 10, 40, 30}, "Go") || (IsKeyPressed(KEY_ENTER))) {
+    // Text: A =
+    Vector2 lblATw = MeasureTextEx(g_App->mainFont, "A =", fontSize, 1.0f);
+    DrawTextEx(g_App->mainFont, "A =", {x + 225.0f, y + 15.0f + 20.0f - lblATw.y/2.0f}, fontSize, 1.0f, textCol);
+
+    // Box: Input
+    if (GuiTextBox((Rectangle){x + 275.0f, y + 15.0f, 200.0f, 40.0f}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
+
+    // Button: Go
+    if (UIHelper::DrawModernBtn({x + 490.0f, y + 15.0f, 60.0f, 40.0f}, "Go", true, config) || (IsKeyPressed(KEY_ENTER))) {
         Visualizer::Instance().ClearHistory();
         std::vector<int> values;
         std::stringstream ss(inputBuffer);
@@ -120,15 +143,19 @@ void DLLState::DrawInitMenu(float x, float y) {
 
         Visualizer::Instance().SetStep(0);
         Visualizer::Instance().SetPlaying(true);
-
-        inputBuffer[0] = '\0';
-        isInputActive = false;
+        inputBuffer[0] = '\0'; isInputActive = false;
     }
 
-    // Row 2: Random & Browse File
-    DrawText("Random N =", x + 10, y + 65, 20, BLACK);
-    if (GuiTextBox((Rectangle){x + 130, y + 60, 50, 30}, nBuffer, 16, nInputActive)) nInputActive = !nInputActive;
-    if (GuiButton((Rectangle){x + 190, y + 60, 90, 30}, "Generate") || (IsKeyPressed(KEY_ENTER))) {
+    // --- ROW 2 ---
+    // Text: Random N =
+    Vector2 lblNTw = MeasureTextEx(g_App->mainFont, "Random N =", fontSize, 1.0f);
+    DrawTextEx(g_App->mainFont, "Random N =", {x + 15.0f, y + 70.0f + 20.0f - lblNTw.y/2.0f}, fontSize, 1.0f, textCol);
+
+    // Box: N Buffer
+    if (GuiTextBox((Rectangle){x + 165.0f, y + 70.0f, 70.0f, 40.0f}, nBuffer, 16, nInputActive)) nInputActive = !nInputActive;
+
+    // Button: Generate
+    if (UIHelper::DrawModernBtn({x + 250.0f, y + 70.0f, 150.0f, 40.0f}, "Generate", true, config) || (IsKeyPressed(KEY_ENTER))) {
         Visualizer::Instance().ClearHistory();
         int n = atoi(nBuffer);
         if (n < 1) n = 1; if (n > 15) n = 15;
@@ -138,12 +165,11 @@ void DLLState::DrawInitMenu(float x, float y) {
 
         Visualizer::Instance().SetStep(0);
         Visualizer::Instance().SetPlaying(true);
-
-        nBuffer[0] = '\0';
-        nInputActive = false;
+        nBuffer[0] = '\0'; nInputActive = false;
     }
 
-    if (GuiButton((Rectangle){x + 300, y + 60, 120, 30}, "Browse File...")) {
+    // Button: Browse File
+    if (UIHelper::DrawModernBtn({x + 415.0f, y + 70.0f, 220.0f, 40.0f}, "Browse File...", true, config)) {
         const char *filterPatterns[1] = { "*.txt" };
         const char *filePath = tinyfd_openFileDialog("Select Input File", "", 1, filterPatterns, "Text Files", 0);
         if (filePath != NULL) {
@@ -156,169 +182,231 @@ void DLLState::DrawInitMenu(float x, float y) {
 
                 Visualizer::Instance().SetStep(0);
                 Visualizer::Instance().SetPlaying(true);
-
             }
         }
     }
 }
 
 void DLLState::DrawAddMenu(float x, float y) {
-    DrawRectangle(x, y, 400, 120, RAYWHITE);
-    DrawRectangleLines(x, y, 400, 120, GRAY);
+    Color panelBg = UIHelper::GetCanvasBg(config);
+    Color outlineCol = UIHelper::GetOutlineCol(config);
+    Color textCol = UIHelper::GetTextCol(config);
 
-    DrawText("Value:", x + 10, y + 25, 20, BLACK);
-    if (GuiTextBox((Rectangle){x + 80, y + 20, 80, 30}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
+    DrawRectangleRounded({x, y, 480.0f, 130.0f}, 0.1f, 8, panelBg);
+    DrawRectangleRoundedLines({x, y, 480.0f, 130.0f}, 0.1f, 8, outlineCol);
+    float fontSize = 24.0f;
 
-    DrawText("Loc:", x + 180, y + 25, 20, BLACK);
-    if (GuiTextBox((Rectangle){x + 230, y + 20, 80, 30}, locBuffer, 64, isLocActive)) isLocActive = !isLocActive;
+    Vector2 valTw = MeasureTextEx(g_App->mainFont, "Value:", fontSize, 1.0f);
+    DrawTextEx(g_App->mainFont, "Value:", {x + 15.0f, y + 15.0f + 20.0f - valTw.y/2.0f}, fontSize, 1.0f, textCol);
+    if (GuiTextBox((Rectangle){x + 105.0f, y + 15.0f, 100.0f, 40.0f}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
 
-    if (GuiButton((Rectangle){x + 10, y + 70, 60, 30}, "Head")) {
+    Vector2 locTw = MeasureTextEx(g_App->mainFont, "Loc:", fontSize, 1.0f);
+    DrawTextEx(g_App->mainFont, "Loc:", {x + 225.0f, y + 15.0f + 20.0f - locTw.y/2.0f}, fontSize, 1.0f, textCol);
+    if (GuiTextBox((Rectangle){x + 290.0f, y + 15.0f, 100.0f, 40.0f}, locBuffer, 64, isLocActive)) isLocActive = !isLocActive;
+
+    if (UIHelper::DrawModernBtn({x + 15.0f, y + 70.0f, 100.0f, 40.0f}, "Head", true, config)) {
         int start = Visualizer::Instance().GetTotalSteps();
         dll.addHead(atoi(inputBuffer));
         Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);
-        inputBuffer[0] = '\0';
-        isInputActive = false;
-
-        locBuffer[0] = '\0';
-        isLocActive = false;
+        inputBuffer[0] = '\0'; locBuffer[0] = '\0'; isInputActive = isLocActive = false;
     }
-    if (GuiButton((Rectangle){x + 80, y + 70, 60, 30}, "Tail")) {
+    if (UIHelper::DrawModernBtn({x + 130.0f, y + 70.0f, 100.0f, 40.0f}, "Tail", true, config)) {
         int start = Visualizer::Instance().GetTotalSteps();
         dll.addTail(atoi(inputBuffer));
         Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);
-
-        inputBuffer[0] = '\0';
-        isInputActive = false;
-
-        locBuffer[0] = '\0';
-        isLocActive = false;
+        inputBuffer[0] = '\0'; locBuffer[0] = '\0'; isInputActive = isLocActive = false;
     }
-    if (GuiButton((Rectangle){x + 150, y + 70, 90, 30}, "Location")) {
+    if (UIHelper::DrawModernBtn({x + 245.0f, y + 70.0f, 150.0f, 40.0f}, "Location", true, config)) {
         int start = Visualizer::Instance().GetTotalSteps();
         dll.addAtIndex(atoi(locBuffer), atoi(inputBuffer));
         Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);
-
-        inputBuffer[0] = '\0';
-        isInputActive = false;
-
-        locBuffer[0] = '\0';
-        isLocActive = false;
+        inputBuffer[0] = '\0'; locBuffer[0] = '\0'; isInputActive = isLocActive = false;
     }
 }
 
 void DLLState::DrawDeleteMenu(float x, float y) {
-    DrawRectangle(x, y, 300, 120, RAYWHITE);
-    DrawRectangleLines(x, y, 300, 120, GRAY);
+    Color panelBg = UIHelper::GetCanvasBg(config);
+    Color outlineCol = UIHelper::GetOutlineCol(config);
+    Color textCol = UIHelper::GetTextCol(config);
 
-    DrawText("Loc:", x + 10, y + 25, 20, BLACK);
-    if (GuiTextBox((Rectangle){x + 60, y + 20, 80, 30}, locBuffer, 64, isLocActive)) isLocActive = !isLocActive;
+    DrawRectangleRounded({x, y, 400.0f, 130.0f}, 0.1f, 8, panelBg);
+    DrawRectangleRoundedLines({x, y, 400.0f, 130.0f}, 0.1f, 8, outlineCol);
+    float fontSize = 24.0f;
 
-    if (GuiButton((Rectangle){x + 10, y + 70, 60, 30}, "Head")) {
-        int start = Visualizer::Instance().GetTotalSteps();
-        dll.deleteHead();
+    Vector2 locTw = MeasureTextEx(g_App->mainFont, "Loc:", fontSize, 1.0f);
+    DrawTextEx(g_App->mainFont, "Loc:", {x + 15.0f, y + 15.0f + 20.0f - locTw.y/2.0f}, fontSize, 1.0f, textCol);
+    if (GuiTextBox((Rectangle){x + 80.0f, y + 15.0f, 100.0f, 40.0f}, locBuffer, 64, isLocActive)) isLocActive = !isLocActive;
+
+    if (UIHelper::DrawModernBtn({x + 15.0f, y + 70.0f, 90.0f, 40.0f}, "Head", true, config)) {
+        int start = Visualizer::Instance().GetTotalSteps(); dll.deleteHead();
         Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);
-
-        locBuffer[0] = '\0';
-        isLocActive = false;
+        locBuffer[0] = '\0'; isLocActive = false;
     }
-    if (GuiButton((Rectangle){x + 80, y + 70, 60, 30}, "Tail")) {
-        int start = Visualizer::Instance().GetTotalSteps();
-        dll.deleteTail();
+    if (UIHelper::DrawModernBtn({x + 120.0f, y + 70.0f, 90.0f, 40.0f}, "Tail", true, config)) {
+        int start = Visualizer::Instance().GetTotalSteps(); dll.deleteTail();
         Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);
-
-        locBuffer[0] = '\0';
-        isLocActive = false;
+        locBuffer[0] = '\0'; isLocActive = false;
     }
-    if (GuiButton((Rectangle){x + 150, y + 70, 90, 30}, "Location")|| (IsKeyPressed(KEY_ENTER))) {
-        int start = Visualizer::Instance().GetTotalSteps();
-        dll.deleteAtIndex(atoi(locBuffer));
+    if (UIHelper::DrawModernBtn({x + 225.0f, y + 70.0f, 140.0f, 40.0f}, "Location", true, config)|| (IsKeyPressed(KEY_ENTER))) {
+        int start = Visualizer::Instance().GetTotalSteps(); dll.deleteAtIndex(atoi(locBuffer));
         Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);
-
-        locBuffer[0] = '\0';
-        isLocActive = false;
+        locBuffer[0] = '\0'; isLocActive = false;
     }
 }
 
 void DLLState::DrawUpdateMenu(float x, float y) {
-    DrawRectangle(x, y, 350, 120, RAYWHITE);
-    DrawRectangleLines(x, y, 350, 120, GRAY);
+    Color panelBg = UIHelper::GetCanvasBg(config);
+    Color outlineCol = UIHelper::GetOutlineCol(config);
+    Color textCol = UIHelper::GetTextCol(config);
 
-    DrawText("Loc:", x + 10, y + 25, 20, BLACK);
-    if (GuiTextBox((Rectangle){x + 60, y + 20, 60, 30}, locBuffer, 64, isLocActive)) isLocActive = !isLocActive;
+    DrawRectangleRounded({x, y, 480.0f, 130.0f}, 0.1f, 8, panelBg);
+    DrawRectangleRoundedLines({x, y, 480.0f, 130.0f}, 0.1f, 8, outlineCol);
+    float fontSize = 24.0f;
 
-    DrawText("New Val:", x + 140, y + 25, 20, BLACK);
-    if (GuiTextBox((Rectangle){x + 230, y + 20, 80, 30}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
+    Vector2 locTw = MeasureTextEx(g_App->mainFont, "Loc:", fontSize, 1.0f);
+    DrawTextEx(g_App->mainFont, "Loc:", {x + 15.0f, y + 15.0f + 20.0f - locTw.y/2.0f}, fontSize, 1.0f, textCol);
+    if (GuiTextBox((Rectangle){x + 80.0f, y + 15.0f, 80.0f, 40.0f}, locBuffer, 64, isLocActive)) isLocActive = !isLocActive;
 
-    if (GuiButton((Rectangle){x + 10, y + 70, 200, 30}, "Update Location") || (IsKeyPressed(KEY_ENTER))) {
+    Vector2 newTw = MeasureTextEx(g_App->mainFont, "New Val:", fontSize, 1.0f);
+    DrawTextEx(g_App->mainFont, "New Val:", {x + 180.0f, y + 15.0f + 20.0f - newTw.y/2.0f}, fontSize, 1.0f, textCol);
+    if (GuiTextBox((Rectangle){x + 310.0f, y + 15.0f, 100.0f, 40.0f}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
+
+    if (UIHelper::DrawModernBtn({x + 15.0f, y + 70.0f, 250.0f, 40.0f}, "Update Location", true, config) || (IsKeyPressed(KEY_ENTER))) {
         int start = Visualizer::Instance().GetTotalSteps();
         dll.updateAtIndex(atoi(locBuffer), atoi(inputBuffer));
         Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);
-        inputBuffer[0] = '\0';
-        isInputActive = false;
-        locBuffer[0] = '\0';
-        isLocActive = false;
+        inputBuffer[0] = '\0'; locBuffer[0] = '\0'; isInputActive = false; isLocActive = false;
     }
 }
 
 void DLLState::DrawSearchMenu(float x, float y) {
-    DrawRectangle(x, y, 250, 120, RAYWHITE);
-    DrawRectangleLines(x, y, 250, 120, GRAY);
+    Color panelBg = UIHelper::GetCanvasBg(config);
+    Color outlineCol = UIHelper::GetOutlineCol(config);
+    Color textCol = UIHelper::GetTextCol(config);
 
-    DrawText("Value:", x + 10, y + 25, 20, BLACK);
-    if (GuiTextBox((Rectangle){x + 80, y + 20, 80, 30}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
+    DrawRectangleRounded({x, y, 280.0f, 130.0f}, 0.1f, 8, panelBg);
+    DrawRectangleRoundedLines({x, y, 280.0f, 130.0f}, 0.1f, 8, outlineCol);
+    float fontSize = 24.0f;
 
-    if (GuiButton((Rectangle){x + 10, y + 70, 180, 30}, "Search Value") || (IsKeyPressed(KEY_ENTER))) {
+    Vector2 valTw = MeasureTextEx(g_App->mainFont, "Value:", fontSize, 1.0f);
+    DrawTextEx(g_App->mainFont, "Value:", {x + 15.0f, y + 15.0f + 20.0f - valTw.y/2.0f}, fontSize, 1.0f, textCol);
+    if (GuiTextBox((Rectangle){x + 105.0f, y + 15.0f, 120.0f, 40.0f}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
+
+    if (UIHelper::DrawModernBtn({x + 15.0f, y + 70.0f, 210.0f, 40.0f}, "Search Value", true, config) || (IsKeyPressed(KEY_ENTER))) {
         int start = Visualizer::Instance().GetTotalSteps();
         dll.searchNode(atoi(inputBuffer));
         Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);
-
-        inputBuffer[0] = '\0';
-        isInputActive = false;
+        inputBuffer[0] = '\0'; isInputActive = false;
     }
 }
 
 void DLLState::DrawPlayback() {
-    int centerX = GetScreenWidth() / 2;
-    int y = GetScreenHeight() - 240; // Floating perfectly above the bottom toolbar
+    Color textCol = config.isDarkMode ? Color{226, 215, 193, 255} : Color{40, 40, 40, 255};
+    Color panelBg = config.isDarkMode ? Color{57, 62, 70, 230} : Color{245, 232, 232, 230};
+    Color outlineCol = config.isDarkMode ? Color{162, 151, 137, 255} : Color{238, 217, 217, 255};
 
-    if (GuiButton((Rectangle){(float)centerX - 100, (float)y, 40, 30}, "<<")) Visualizer::Instance().GoToStart();
-    if (GuiButton((Rectangle){(float)centerX - 50, (float)y, 40, 30}, "<")) Visualizer::Instance().PrevStep();
+    float centerX = GetScreenWidth() / 2.0f;
+    float y = GetScreenHeight() - 240.0f;
+
+    Rectangle playbackRect = {centerX - 120.0f, y - 10.0f, 560.0f, 50.0f};
+    DrawRectangleRounded(playbackRect, 0.5f, 10, panelBg);
+    DrawRectangleRoundedLines(playbackRect, 0.5f, 10, outlineCol);
+
+    auto DrawMiniBtn = [&](Rectangle rect, const char* text) -> bool {
+        Vector2 mouse = GetMousePosition();
+        bool isHovering = CheckCollisionPointRec(mouse, rect);
+
+        Color bg = isHovering ? Fade(textCol, 0.15f) : Fade(textCol, 0.05f);
+        DrawRectangleRounded(rect, 0.4f, 8, bg);
+        DrawRectangleRoundedLines(rect, 0.4f, 8, outlineCol);
+
+        // 🌟 PERFECT CENTERING WITH 24px FONT
+        float fontSize = 24.0f;
+        Vector2 tw = MeasureTextEx(g_App->mainFont, text, fontSize, 1.0f);
+        DrawTextEx(g_App->mainFont, text,
+            {rect.x + rect.width/2.0f - tw.x/2.0f, rect.y + rect.height/2.0f - tw.y/2.0f},
+            fontSize, 1.0f, textCol);
+
+        return isHovering && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
+    };
+
+    if (DrawMiniBtn({centerX - 100.0f, y, 40.0f, 30.0f}, "<<")) Visualizer::Instance().GoToStart();
+    if (DrawMiniBtn({centerX - 50.0f, y, 40.0f, 30.0f}, "<")) Visualizer::Instance().PrevStep();
 
     const char* label = Visualizer::Instance().IsPlaying() ? "||" : ">";
-    if (GuiButton((Rectangle){(float)centerX, (float)y, 40, 30}, label)) Visualizer::Instance().TogglePlay();
+    if (DrawMiniBtn({centerX, y, 40.0f, 30.0f}, label)) Visualizer::Instance().TogglePlay();
 
-    if (GuiButton((Rectangle){(float)centerX + 50, (float)y, 40, 30}, ">")) Visualizer::Instance().NextStep();
-    if (GuiButton((Rectangle){(float)centerX + 100, (float)y, 40, 30}, ">>")) Visualizer::Instance().GoToEnd();
+    if (DrawMiniBtn({centerX + 50.0f, y, 40.0f, 30.0f}, ">")) Visualizer::Instance().NextStep();
+    if (DrawMiniBtn({centerX + 100.0f, y, 40.0f, 30.0f}, ">>")) Visualizer::Instance().GoToEnd();
 
-    DrawText("Speed:", centerX + 220, y + 5, 20, BLACK);
-    GuiSlider((Rectangle){(float)centerX + 350, (float)y, 100, 30}, "Fast", "Slow", &playbackSpeed, 0.1f, 2.0f);
+    UIHelper::DrawModernSlider({centerX + 265.0f, y, 110.0f, 30.0f}, "Fast", "Slow", &playbackSpeed, 0.1f, 2.0f, config);
     Visualizer::Instance().SetSpeed(playbackSpeed);
 }
 
 void DLLState::DrawPseudocode() {
-    int panelW = 600;
-    int panelH = 200;
-    int startX = GetScreenWidth() - panelW;
-    int startY = GetScreenHeight() - 200;
+    float panelW = 600.0f;
+    float panelH = 200.0f;
+    float startX = GetScreenWidth() - panelW;
+    float startY = GetScreenHeight() - panelW/3.0f; // Ensure scaling aligns
 
-    // Background
-    DrawRectangle(startX, startY, panelW, panelH, Fade(BLACK, 0.8f));
-    DrawRectangleLines(startX, startY, panelW, panelH, GRAY);
-    DrawText("Pseudocode", startX + 10, startY + 10, 20, WHITE);
+    Color panelBg = config.isDarkMode ? Color{45, 50, 60, 255} : Color{240, 225, 225, 255};
+    Color outlineCol = config.isDarkMode ? Color{162, 151, 137, 255} : Color{238, 217, 217, 255};
+    Color textCol = config.isDarkMode ? Color{226, 215, 193, 255} : Color{40, 40, 40, 255};
 
-    // Get Data
+    DrawRectangle(startX, startY, panelW, panelH, panelBg);
+    DrawRectangleLines(startX, startY, panelW, panelH, outlineCol);
+    DrawTextEx(g_App->boldFont, "Pseudocode", {startX + 15.0f, startY + 15.0f}, 24.0f, 1.0f, textCol);
+    DrawLine(startX, startY + 45.0f, startX + panelW, startY + 45.0f, outlineCol);
+
     const AnimationState& state = Visualizer::Instance().GetCurrentState();
     if (state.codeText.empty()) return;
 
-    // Draw Lines
-    int y = startY + 40;
+    float y = startY + 55.0f;
     for (int i = 0; i < state.codeText.size(); i++) {
         if (i == state.codeLineIndex) {
-            DrawRectangle(startX, y - 2, panelW, 25, BLACK);
-            DrawText(state.codeText[i].c_str(), startX + 10, y, 20, YELLOW);
+            DrawRectangle(startX, y - 2.0f, panelW, 25.0f, config.isDarkMode ? Color{80, 85, 95, 255} : Color{220, 190, 190, 255});
+            DrawTextEx(g_App->mainFont, state.codeText[i].c_str(), {startX + 15.0f, y}, 24.0f, 1.0f, textCol);
         } else {
-            DrawText(state.codeText[i].c_str(), startX + 10, y, 20, LIGHTGRAY);
+            DrawTextEx(g_App->mainFont, state.codeText[i].c_str(), {startX + 15.0f, y}, 20.0f, 1.0f, Fade(textCol, 0.5f));
         }
-        y += 25;
+        y += 25.0f;
+    }
+}
+
+void DLLState::DrawSettingsModal() {
+    float width = 400.0f; float height = 340.0f;
+    float startX = GetScreenWidth() / 2.0f - width / 2.0f;
+    float startY = GetScreenHeight() / 2.0f - height / 2.0f;
+
+    Color modalBg = config.isDarkMode ? Color{57, 62, 70, 255} : Color{251, 239, 239, 255};
+    Color textCol = config.isDarkMode ? Color{223, 208, 184, 255} : BLACK;
+
+    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), {0, 0, 0, 150});
+    DrawRectangle(startX, startY, width, height, modalBg);
+    DrawRectangleLines(startX, startY, width, height, DARKGRAY);
+
+    Vector2 ts = MeasureTextEx(g_App->boldFont, "Visual Settings", 26.0f, 1.0f);
+    DrawTextEx(g_App->boldFont, "Visual Settings", {startX + width/2.0f - ts.x/2.0f, startY + 20.0f}, 26.0f, 1.0f, textCol);
+    DrawLine(startX + 20.0f, startY + 55.0f, startX + width - 20.0f, startY + 55.0f, GRAY);
+
+    GuiCheckBox((Rectangle){startX + 30.0f, startY + 80.0f, 24.0f, 24.0f}, " Dark Mode", &config.isDarkMode);
+
+    // 🌟 DYNAMICALLY CENTERED LABELS FOR 20px SLIDERS
+    float lblSize = 22.0f;
+
+    Vector2 radTw = MeasureTextEx(g_App->mainFont, "Node Radius", lblSize, 1.0f);
+    DrawTextEx(g_App->mainFont, "Node Radius", {startX + 30.0f, (startY + 130.0f + 10.0f) - (radTw.y/2.0f)}, lblSize, 1.0f, textCol);
+    GuiSliderBar((Rectangle){startX + 160.0f, startY + 130.0f, 180.0f, 20.0f}, NULL, NULL, &config.nodeRadius, 15.0f, 40.0f);
+
+    Vector2 edgeTw = MeasureTextEx(g_App->mainFont, "Edge Width", lblSize, 1.0f);
+    DrawTextEx(g_App->mainFont, "Edge Width", {startX + 30.0f, (startY + 180.0f + 10.0f) - (edgeTw.y/2.0f)}, lblSize, 1.0f, textCol);
+    GuiSliderBar((Rectangle){startX + 160.0f, startY + 180.0f, 180.0f, 20.0f}, NULL, NULL, &config.edgeThickness, 1.0f, 10.0f);
+
+    Vector2 txtTw = MeasureTextEx(g_App->mainFont, "Text Size", lblSize, 1.0f);
+    DrawTextEx(g_App->mainFont, "Text Size", {startX + 30.0f, (startY + 230.0f + 10.0f) - (txtTw.y/2.0f)}, lblSize, 1.0f, textCol);
+    GuiSliderBar((Rectangle){startX + 160.0f, startY + 230.0f, 180.0f, 20.0f}, NULL, NULL, &config.textSize, 12.0f, 30.0f);
+
+    if (GuiButton((Rectangle){startX + width / 2.0f - 50.0f, startY + 285.0f, 100.0f, 35.0f}, "Close")) {
+        isSettingsOpen = false;
     }
 }

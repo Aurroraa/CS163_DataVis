@@ -2,5 +2,5 @@
 #include "Global.h"
 
 namespace TrieRenderer {
-    void Draw(const AnimationState& state);
+    void Draw(const AnimationState& state, const UIConfig& config);
 }

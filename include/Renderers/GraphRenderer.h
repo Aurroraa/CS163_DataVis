@@ -2,5 +2,5 @@
 #include "../Global.h"
 
 namespace GraphRenderer {
-    void Draw(const AnimationState& state);
+    void Draw(const AnimationState& state, UIConfig);
 }

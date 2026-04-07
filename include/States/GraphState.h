@@ -1,5 +1,7 @@
 #pragma once
 #include "State.h"
+#include "Global.h"
+#include "UIHelper.h"
 #include "../DataStructures/Graph.h"
 
 class GraphState : public State {
@@ -17,6 +19,9 @@ private:
     char textEditorBuffer[2048] = {0};
     std::string lastText = "";
 
+    UIConfig config;
+    bool isSettingsOpen = false;
+
     float playbackSpeed = 0.5f;
 
     // The Bottom Toolbar
@@ -31,6 +36,7 @@ private:
 
     void DrawPseudocode();
     void DrawPlayback();
+    void DrawSettingsModal();
 
 public:
     GraphState();

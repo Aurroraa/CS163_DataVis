@@ -1,6 +1,7 @@
 #include "../include/Visualizer.h"
 #include "../include/Renderers/DLLRenderer.h"
 #include "raylib.h"
+#include "App.h"
 
 // --- Playback Logic ---
 
@@ -60,17 +61,26 @@ const AnimationState& Visualizer::GetCurrentState() const {
 
 void Visualizer::DrawCanvas() {
     if (history.empty()) {
-        DrawText("List is empty. Create or Insert nodes!", 300, 300, 20, GRAY);
+        const char* emptyMsg = "Data Structure is empty. Initialize or Insert nodes!";
+        float fontSize = 24.0f;
+        Vector2 msgSize = MeasureTextEx(g_App->mainFont, emptyMsg, fontSize, 1.0f);
+
+        // 🌟 Perfectly center the message in the canvas area (above the 200px toolbar)
+        float cx = GetScreenWidth() / 2.0f - msgSize.x / 2.0f;
+        float cy = (GetScreenHeight() - 200.0f) / 2.0f - msgSize.y / 2.0f;
+
+        DrawTextEx(g_App->mainFont, emptyMsg, {cx, cy}, fontSize, 1.0f, GRAY);
         return;
     }
+
     const AnimationState& state = history[currentStep];
 
     // Delegate to Renderer
     // DLLRenderer::Draw(state);
 
-    // Draw Step Counter
-    DrawText(TextFormat("Step: %d / %d", currentStep + 1, history.size()),
-             20, GetScreenHeight() - 230, 20, DARKGRAY);
+    // 🌟 Draw Step Counter using the bold custom font
+    const char* stepText = TextFormat("Step: %d / %d", currentStep + 1, (int)history.size());
+    DrawTextEx(g_App->boldFont, stepText, {20.0f, (float)GetScreenHeight() - 235.0f}, 24.0f, 1.0f, DARKGRAY);
 }
 
 void Visualizer::SetStep(int step) {

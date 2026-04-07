@@ -17,6 +17,9 @@ App::App() {
     boldFont = LoadFontEx("assets/JetBrainsMonoNL-ExtraBold.ttf", 64, 0, 250);
 
     GuiSetFont(mainFont);
+
+    GuiSetStyle(DEFAULT, TEXT_SIZE, 24);
+    GuiSetStyle(DEFAULT, TEXT_SPACING, 1);
 }
 
 App::~App() {

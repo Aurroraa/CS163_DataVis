@@ -1,6 +1,7 @@
 #pragma once
 #include "raylib.h"
 #include "Global.h"
+#include "App.h"
 
 namespace UIHelper {
     // --- GLOBAL PALETTES ---
@@ -25,8 +26,11 @@ namespace UIHelper {
         DrawRectangleRoundedLines(rect, 0.4f, 8, isPrimary ? bg : GetOutlineCol(config));
         
         Color labelCol = isPrimary ? (config.isDarkMode ? BLACK : WHITE) : textCol;
-        int tw = MeasureText(text, 18);
-        DrawText(text, rect.x + rect.width/2 - tw/2, rect.y + rect.height/2 - 9, 18, labelCol);
+        float fontSize = 24.0f;
+        Vector2 tw = MeasureTextEx(g_App->mainFont, text, fontSize, 1.0f);
+        DrawTextEx(g_App->mainFont, text,
+            {rect.x + rect.width/2.0f - tw.x/2.0f, rect.y + rect.height/2.0f - tw.y/2.0f},
+            fontSize, 1.0f, labelCol);
         
         return isHovering && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
     }

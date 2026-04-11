@@ -44,7 +44,7 @@ bool DrawDataStructureCard(Rectangle rect, DSCard card, const UIConfig& config) 
 
     DrawDSIcon(centerX, rect.y + rect.height * 0.3f, iconSize, card.iconType, currentOutline, cardBgCol, config.edgeThickness);
 
-    float nameSize = config.textSize * 1.1f;
+    float nameSize = config.textSize * 1.5f;
     Vector2 nameTw = MeasureTextEx(g_App->boldFont, card.name.c_str(), nameSize, 1.0f);
     DrawTextEx(g_App->boldFont, card.name.c_str(), {centerX - nameTw.x/2.0f, rect.y + rect.height * 0.55f}, nameSize, 1.0f, textCol);
 

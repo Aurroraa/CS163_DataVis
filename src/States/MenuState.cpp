@@ -20,13 +20,13 @@ void MenuState::Draw() {
 
     // Title
     const char* title = "CS VISUALIZER";
-    float titleFontSize = 60.0f;
+    float titleFontSize = 100.0f;
     Vector2 titleSize = MeasureTextEx(g_App->boldFont, title, titleFontSize, 2.0f);
-    DrawTextEx(g_App->boldFont, title, {screenW / 2.0f - titleSize.x / 2.0f, screenH * 0.3f}, titleFontSize, 2.0f, PAL_PEACH);
+    DrawTextEx(g_App->boldFont, title, {screenW / 2.0f - titleSize.x / 2.0f, screenH * 0.28f}, titleFontSize, 2.0f, PAL_PEACH);
 
     // Subtitle
     const char* subtitle = "Interactive Data Structures";
-    float subSize = 20.0f;
+    float subSize = 28.0f;
     Vector2 subTw = MeasureTextEx(g_App->mainFont, subtitle, subSize, 1.0f);
     DrawTextEx(g_App->mainFont, subtitle, {screenW / 2.0f - subTw.x / 2.0f, screenH * 0.3f + 70.0f}, subSize, 1.0f, PAL_PINK);
 
@@ -42,7 +42,7 @@ void MenuState::Draw() {
 
     Color startTextCol = startHover ? PAL_DARK : PAL_PEACH;
     Vector2 stTw = MeasureTextEx(g_App->mainFont, "Start", 24.0f, 1.0f);
-    DrawTextEx(g_App->mainFont, "Start", {startBtn.x + btnW / 2.0f - stTw.x / 2.0f, startBtn.y + btnH / 2.0f - stTw.y / 2.0f}, 24.0f, 1.0f, startTextCol);
+    DrawTextEx(g_App->mainFont, "Start", {startBtn.x + btnW / 2.0f - stTw.x / 2.0f, startBtn.y + btnH / 2.0f - stTw.y / 2.0f}, 26.0f, 1.0f, startTextCol);
 
     if (startHover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
         g_App->ChangeState(new SelectState());
@@ -50,7 +50,7 @@ void MenuState::Draw() {
     }
 
     // Exit Button
-    Rectangle exitBtn = {btnX, screenH * 0.65f, btnW, btnH};
+    Rectangle exitBtn = {btnX, screenH * 0.6f, btnW, btnH};
     bool exitHover = CheckCollisionPointRec(mouse, exitBtn);
     DrawRectangleRounded(exitBtn, 0.4f, 8, exitHover ? PAL_PINK : PAL_MID);
 

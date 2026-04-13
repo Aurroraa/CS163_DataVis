@@ -483,46 +483,63 @@ void GraphState::DrawPlayback() {
 void GraphState::DrawPseudocode() {
     const AnimationState& state = Visualizer::Instance().GetCurrentState();
 
+    // 🌟 LOCKED DIMENSIONS
     float panelW = 600.0f;
-    float lineSpacing = 28.0f;
-    float headerSpace = 55.0f;
-    float bottomPadding = 15.0f;
-
-    // 🌟 DYNAMIC HEIGHT CALCULATION
-    int numLines = state.codeText.empty() ? 1 : state.codeText.size();
-    float calculatedH = headerSpace + (numLines * lineSpacing) + bottomPadding;
-    float panelH = std::max(200.0f, calculatedH); // Ensure it's at least 200px to match the toolbar!
-
+    float panelH = 200.0f;
     float startX = GetScreenWidth() - panelW;
-    float startY = GetScreenHeight() - panelH; // Expands upwards!
+    float startY = GetScreenHeight() - panelH;
 
     Color panelBg = config.isDarkMode ? Color{45, 50, 60, 255} : Color{240, 225, 225, 255};
     Color outlineCol = config.isDarkMode ? Color{162, 151, 137, 255} : Color{238, 217, 217, 255};
     Color textCol = config.isDarkMode ? Color{226, 215, 193, 255} : Color{40, 40, 40, 255};
 
+    // Draw Base Panel
     DrawRectangle(startX, startY, panelW, panelH, panelBg);
     DrawRectangleLines(startX, startY, panelW, panelH, outlineCol);
 
-    // Header
+    // Draw Header (Drawn BEFORE scissor mode so it never scrolls!)
     DrawTextEx(g_App->boldFont, "Pseudocode", {startX + 15.0f, startY + 15.0f}, 24.0f, 1.0f, textCol);
     DrawLine(startX, startY + 45.0f, startX + panelW, startY + 45.0f, outlineCol);
 
     if (state.codeText.empty()) return;
 
-    float y = startY + 55.0f;
+    // --- 🌟 AUTO-SCROLL MATH ---
+    float lineSpacing = 28.0f;
+    float viewableH = panelH - 55.0f; // Space below the header
+    float contentH = state.codeText.size() * lineSpacing;
+
+    static float scrollY = 0.0f; // Keeps track of our scroll position
+    float activeY = state.codeLineIndex * lineSpacing;
+
+    // Calculate where we need to scroll to keep the active line vertically centered
+    float targetScroll = activeY - (viewableH / 2.0f) + (lineSpacing / 2.0f);
+
+    // Clamp the scrolling so it doesn't scroll past the top or bottom
+    if (targetScroll < 0) targetScroll = 0;
+    if (targetScroll > contentH - viewableH && contentH > viewableH) targetScroll = contentH - viewableH;
+    if (contentH <= viewableH) targetScroll = 0;
+
+    // Smooth LERP (Linear Interpolation) for that premium sliding animation!
+    scrollY += (targetScroll - scrollY) * 0.1f;
+
+    // --- 🌟 START CLIPPING MASK ---
+    // Anything drawn after this line will be hidden if it goes outside the box!
+    BeginScissorMode(startX, startY + 46, panelW, panelH - 46);
+
+    float y = startY + 55.0f - scrollY; // Apply the scroll offset to the starting Y
+
     for (int i = 0; i < state.codeText.size(); i++) {
         if (i == state.codeLineIndex) {
-            // Highlight Box
             DrawRectangle(startX, y - 2.0f, panelW, lineSpacing, config.isDarkMode ? Color{80, 85, 95, 255} : Color{220, 190, 190, 255});
-
-            // 🌟 LOCKED TO 20px, USING BOLD FONT TO POP!
             DrawTextEx(g_App->boldFont, state.codeText[i].c_str(), {startX + 15.0f, y + 4.0f}, 20.0f, 1.0f, textCol);
         } else {
-            // 🌟 LOCKED TO 20px, FADED
             DrawTextEx(g_App->mainFont, state.codeText[i].c_str(), {startX + 15.0f, y + 4.0f}, 20.0f, 1.0f, Fade(textCol, 0.6f));
         }
         y += lineSpacing;
     }
+
+    // --- 🌟 END CLIPPING MASK ---
+    EndScissorMode();
 }
 
 void GraphState::DrawSettingsModal() {

@@ -42,13 +42,21 @@ bool DrawDataStructureCard(Rectangle rect, DSCard card, const UIConfig& config) 
     float centerX = rect.x + rect.width / 2.0f;
     float iconSize = rect.height * 0.35f;
 
-    DrawDSIcon(centerX, rect.y + rect.height * 0.3f, iconSize, card.iconType, currentOutline, cardBgCol, config.edgeThickness);
+    DrawDSIcon(centerX, rect.y + rect.height * 0.25f, iconSize, card.iconType, currentOutline, cardBgCol, config.edgeThickness);
 
-    float nameSize = config.textSize * 1.1f;
+    // 🌟 BIGGER CARD TITLE
+    float nameSize = 28.0f;
     Vector2 nameTw = MeasureTextEx(g_App->boldFont, card.name.c_str(), nameSize, 1.0f);
-    DrawTextEx(g_App->boldFont, card.name.c_str(), {centerX - nameTw.x/2.0f, rect.y + rect.height * 0.55f}, nameSize, 1.0f, textCol);
+    DrawTextEx(g_App->boldFont, card.name.c_str(), {centerX - nameTw.x/2.0f, rect.y + rect.height * 0.50f}, nameSize, 1.0f, textCol);
 
-    Rectangle btnRect = {centerX - 60.0f, rect.y + rect.height * 0.75f, 120.0f, 40.0f};
+    // 🌟 ADDED MISSING DESCRIPTION
+    float descSize = 20.0f;
+    Color descCol = Fade(textCol, 0.7f);
+    Vector2 descTw = MeasureTextEx(g_App->mainFont, card.description.c_str(), descSize, 1.0f);
+    DrawTextEx(g_App->mainFont, card.description.c_str(), {centerX - descTw.x/2.0f, rect.y + rect.height * 0.65f}, descSize, 1.0f, descCol);
+
+    // Bigger Start Button on Card
+    Rectangle btnRect = {centerX - 75.0f, rect.y + rect.height * 0.80f, 150.0f, 45.0f};
     if (UIHelper::DrawModernBtn(btnRect, "Start", isHovering, config) || (isHovering && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))) {
         return true;
     }
@@ -61,27 +69,31 @@ void SelectState::Draw() {
 
     // Header
     Color headerBg = GetColor(0x021A54FF);
-    float headerH = 100.0f;
+    float headerH = 120.0f; // Made header slightly taller
     DrawRectangle(0, 0, GetScreenWidth(), headerH, headerBg);
     DrawRectangleGradientV(0, headerH, GetScreenWidth(), 8, Fade(BLACK, 0.2f), BLANK);
 
-    Vector2 titleTw = MeasureTextEx(g_App->boldFont, "CS Visualizer", 40.0f, 2.0f);
-    DrawTextEx(g_App->boldFont, "CS Visualizer", {GetScreenWidth() / 2.0f - titleTw.x / 2.0f, 20.0f}, 40.0f, 2.0f, WHITE);
+    // 🌟 BIGGER HEADER TITLE
+    float titleFontSize = 56.0f;
+    Vector2 titleTw = MeasureTextEx(g_App->boldFont, "CS Visualizer", titleFontSize, 2.0f);
+    DrawTextEx(g_App->boldFont, "CS Visualizer", {GetScreenWidth() / 2.0f - titleTw.x / 2.0f, 20.0f}, titleFontSize, 2.0f, WHITE);
 
+    // 🌟 BIGGER HEADER SUBTITLE
+    float subFontSize = 26.0f;
     Color subtitleCol = Fade(WHITE, 0.7f);
-    Vector2 subTw = MeasureTextEx(g_App->mainFont, "Select Data Structure to start visualization", 20.0f, 1.0f);
-    DrawTextEx(g_App->mainFont, "Select Data Structure to start visualization", {GetScreenWidth() / 2.0f - subTw.x / 2.0f, 65.0f}, 20.0f, 1.0f, subtitleCol);
+    Vector2 subTw = MeasureTextEx(g_App->mainFont, "Select Data Structure to start visualization", subFontSize, 1.0f);
+    DrawTextEx(g_App->mainFont, "Select Data Structure to start visualization", {GetScreenWidth() / 2.0f - subTw.x / 2.0f, 20.0f + titleTw.y + 5.0f}, subFontSize, 1.0f, subtitleCol);
 
     // Home Button
-    Rectangle homeRect = {30, 30, 90, 40};
+    Rectangle homeRect = {30, 40, 100, 45};
     Vector2 mouse = GetMousePosition();
     bool hoverHome = CheckCollisionPointRec(mouse, homeRect);
 
     DrawRectangleRounded(homeRect, 0.3f, 8, hoverHome ? Fade(WHITE, 0.3f) : Fade(WHITE, 0.1f));
     DrawRectangleRoundedLinesEx(homeRect, 0.3f, 8, 2.0f, WHITE);
 
-    Vector2 homeTw = MeasureTextEx(g_App->mainFont, "Home", 20.0f, 1.0f);
-    DrawTextEx(g_App->mainFont, "Home", {homeRect.x + 45.0f - homeTw.x/2.0f, homeRect.y + 20.0f - homeTw.y/2.0f}, 20.0f, 1.0f, WHITE);
+    Vector2 homeTw = MeasureTextEx(g_App->mainFont, "Home", 24.0f, 1.0f);
+    DrawTextEx(g_App->mainFont, "Home", {homeRect.x + homeRect.width/2.0f - homeTw.x/2.0f, homeRect.y + homeRect.height/2.0f - homeTw.y/2.0f}, 24.0f, 1.0f, WHITE);
 
     if (hoverHome && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
         g_App->ChangeState(new MenuState());
@@ -103,8 +115,8 @@ void SelectState::Draw() {
     float cardW = (GetScreenWidth() - (cols + 1) * padding) / cols;
     float cardH = (GetScreenHeight() - headerH - (rows + 1) * padding) / rows;
 
-    if (cardW > 350.0f) cardW = 350.0f;
-    if (cardH > 300.0f) cardH = 300.0f;
+    if (cardW > 420.0f) cardW = 420.0f; // Allowed cards to get a bit wider
+    if (cardH > 350.0f) cardH = 350.0f; // Allowed cards to get a bit taller
 
     float gridH = rows * cardH + (rows - 1) * padding;
     float startY = headerH + padding + (GetScreenHeight() - headerH - gridH - padding * 2) / 2.0f;
@@ -135,33 +147,32 @@ void SelectState::Draw() {
 // Helper: Draw Geometric Icons
 // ---------------------------------------------------------
 void DrawDSIcon(float x, float y, float size, char type, Color color, Color bgColor, float thickness) {
-    float r = size * 0.12f; // Node radius relative to icon size
-    float offset = size * 0.25f; // Spread of the nodes
+    // Keep your exact existing DrawDSIcon logic here!
+    float r = size * 0.12f;
+    float offset = size * 0.25f;
 
-    // Draw lines FIRST so they sit behind the nodes
     switch (type) {
-        case 'G': // Graph (Triangle)
+        case 'G':
             DrawLineEx({x, y - offset}, {x - offset, y + offset}, thickness, color);
             DrawLineEx({x, y - offset}, {x + offset, y + offset}, thickness, color);
             DrawLineEx({x - offset, y + offset}, {x + offset, y + offset}, thickness, color);
             break;
-        case 'A': // AVL (Balanced)
-        case 'H': // Heap (Complete)
-        case 'T': // Generic Tree
+        case 'A':
+        case 'H':
+        case 'T':
             DrawLineEx({x, y - offset}, {x - offset, y + offset}, thickness, color);
             DrawLineEx({x, y - offset}, {x + offset, y + offset}, thickness, color);
             break;
-        case 'P': // Trie
+        case 'P':
             DrawLineEx({x, y - offset}, {x, y + offset}, thickness, color);
             DrawLineEx({x, y - offset}, {x - offset, y}, thickness, color);
             DrawLineEx({x, y - offset}, {x + offset, y}, thickness, color);
             break;
-        case 'L': // DLL (Lines between boxes)
+        case 'L':
             DrawLineEx({x - offset, y}, {x + offset, y}, thickness * 2, color);
             break;
     }
 
-    // Draw Nodes SECOND so they cover the line joints cleanly
     switch (type) {
         case 'G':
         case 'A':
@@ -171,13 +182,12 @@ void DrawDSIcon(float x, float y, float size, char type, Color color, Color bgCo
             DrawCircle(x - offset, y + offset, r, color);
             DrawCircle(x + offset, y + offset, r, color);
 
-            // Hollow effect
             DrawCircle(x, y - offset, r - thickness, bgColor);
             DrawCircle(x - offset, y + offset, r - thickness, bgColor);
             DrawCircle(x + offset, y + offset, r - thickness, bgColor);
             break;
 
-        case 'P': // Trie Nodes
+        case 'P':
             DrawCircle(x, y - offset, r, color);
             DrawCircle(x, y + offset, r, color);
             DrawCircle(x - offset, y, r, color);
@@ -189,11 +199,10 @@ void DrawDSIcon(float x, float y, float size, char type, Color color, Color bgCo
             DrawCircle(x + offset, y, r - thickness, bgColor);
             break;
 
-        case 'L': // DLL Boxes
+        case 'L':
             float boxW = size * 0.25f;
             float boxH = size * 0.15f;
 
-            // Left, Center, Right boxes
             DrawRectangle(x - offset - boxW/2, y - boxH/2, boxW, boxH, bgColor);
             DrawRectangleLinesEx({x - offset - boxW/2, y - boxH/2, boxW, boxH}, thickness, color);
 

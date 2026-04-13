@@ -188,14 +188,11 @@ void DLLState::DrawInitMenu(float x, float y) {
 }
 
 void DLLState::DrawAddMenu(float x, float y) {
-    Color panelBg = UIHelper::GetCanvasBg(config);
-    Color outlineCol = UIHelper::GetOutlineCol(config);
-    Color textCol = UIHelper::GetTextCol(config);
-
+    Color panelBg = UIHelper::GetCanvasBg(config); Color outlineCol = UIHelper::GetOutlineCol(config); Color textCol = UIHelper::GetTextCol(config);
     DrawRectangleRounded({x, y, 480.0f, 130.0f}, 0.1f, 8, panelBg);
     DrawRectangleRoundedLines({x, y, 480.0f, 130.0f}, 0.1f, 8, outlineCol);
-    float fontSize = 24.0f;
 
+    float fontSize = 24.0f;
     Vector2 valTw = MeasureTextEx(g_App->mainFont, "Value:", fontSize, 1.0f);
     DrawTextEx(g_App->mainFont, "Value:", {x + 15.0f, y + 15.0f + 20.0f - valTw.y/2.0f}, fontSize, 1.0f, textCol);
     if (GuiTextBox((Rectangle){x + 105.0f, y + 15.0f, 100.0f, 40.0f}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
@@ -205,64 +202,52 @@ void DLLState::DrawAddMenu(float x, float y) {
     if (GuiTextBox((Rectangle){x + 290.0f, y + 15.0f, 100.0f, 40.0f}, locBuffer, 64, isLocActive)) isLocActive = !isLocActive;
 
     if (UIHelper::DrawModernBtn({x + 15.0f, y + 70.0f, 100.0f, 40.0f}, "Head", true, config)) {
-        int start = Visualizer::Instance().GetTotalSteps();
-        dll.addHead(atoi(inputBuffer));
-        Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);
+        Visualizer::Instance().ClearHistory(); Visualizer::Instance().RecordState("Initial State", 0, dll.captureState(), {});
+        dll.addHead(atoi(inputBuffer)); Visualizer::Instance().SetStep(0); Visualizer::Instance().SetPlaying(true);
         inputBuffer[0] = '\0'; locBuffer[0] = '\0'; isInputActive = isLocActive = false;
     }
     if (UIHelper::DrawModernBtn({x + 130.0f, y + 70.0f, 100.0f, 40.0f}, "Tail", true, config)) {
-        int start = Visualizer::Instance().GetTotalSteps();
-        dll.addTail(atoi(inputBuffer));
-        Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);
+        Visualizer::Instance().ClearHistory(); Visualizer::Instance().RecordState("Initial State", 0, dll.captureState(), {});
+        dll.addTail(atoi(inputBuffer)); Visualizer::Instance().SetStep(0); Visualizer::Instance().SetPlaying(true);
         inputBuffer[0] = '\0'; locBuffer[0] = '\0'; isInputActive = isLocActive = false;
     }
     if (UIHelper::DrawModernBtn({x + 245.0f, y + 70.0f, 150.0f, 40.0f}, "Location", true, config)) {
-        int start = Visualizer::Instance().GetTotalSteps();
-        dll.addAtIndex(atoi(locBuffer), atoi(inputBuffer));
-        Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);
+        Visualizer::Instance().ClearHistory(); Visualizer::Instance().RecordState("Initial State", 0, dll.captureState(), {});
+        dll.addAtIndex(atoi(locBuffer), atoi(inputBuffer)); Visualizer::Instance().SetStep(0); Visualizer::Instance().SetPlaying(true);
         inputBuffer[0] = '\0'; locBuffer[0] = '\0'; isInputActive = isLocActive = false;
     }
 }
 
 void DLLState::DrawDeleteMenu(float x, float y) {
-    Color panelBg = UIHelper::GetCanvasBg(config);
-    Color outlineCol = UIHelper::GetOutlineCol(config);
-    Color textCol = UIHelper::GetTextCol(config);
-
+    Color panelBg = UIHelper::GetCanvasBg(config); Color outlineCol = UIHelper::GetOutlineCol(config); Color textCol = UIHelper::GetTextCol(config);
     DrawRectangleRounded({x, y, 400.0f, 130.0f}, 0.1f, 8, panelBg);
     DrawRectangleRoundedLines({x, y, 400.0f, 130.0f}, 0.1f, 8, outlineCol);
-    float fontSize = 24.0f;
 
+    float fontSize = 24.0f;
     Vector2 locTw = MeasureTextEx(g_App->mainFont, "Loc:", fontSize, 1.0f);
     DrawTextEx(g_App->mainFont, "Loc:", {x + 15.0f, y + 15.0f + 20.0f - locTw.y/2.0f}, fontSize, 1.0f, textCol);
     if (GuiTextBox((Rectangle){x + 80.0f, y + 15.0f, 100.0f, 40.0f}, locBuffer, 64, isLocActive)) isLocActive = !isLocActive;
 
     if (UIHelper::DrawModernBtn({x + 15.0f, y + 70.0f, 90.0f, 40.0f}, "Head", true, config)) {
-        int start = Visualizer::Instance().GetTotalSteps(); dll.deleteHead();
-        Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);
-        locBuffer[0] = '\0'; isLocActive = false;
+        Visualizer::Instance().ClearHistory(); Visualizer::Instance().RecordState("Initial State", 0, dll.captureState(), {});
+        dll.deleteHead(); Visualizer::Instance().SetStep(0); Visualizer::Instance().SetPlaying(true); locBuffer[0] = '\0'; isLocActive = false;
     }
     if (UIHelper::DrawModernBtn({x + 120.0f, y + 70.0f, 90.0f, 40.0f}, "Tail", true, config)) {
-        int start = Visualizer::Instance().GetTotalSteps(); dll.deleteTail();
-        Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);
-        locBuffer[0] = '\0'; isLocActive = false;
+        Visualizer::Instance().ClearHistory(); Visualizer::Instance().RecordState("Initial State", 0, dll.captureState(), {});
+        dll.deleteTail(); Visualizer::Instance().SetStep(0); Visualizer::Instance().SetPlaying(true); locBuffer[0] = '\0'; isLocActive = false;
     }
     if (UIHelper::DrawModernBtn({x + 225.0f, y + 70.0f, 140.0f, 40.0f}, "Location", true, config)|| (IsKeyPressed(KEY_ENTER))) {
-        int start = Visualizer::Instance().GetTotalSteps(); dll.deleteAtIndex(atoi(locBuffer));
-        Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);
-        locBuffer[0] = '\0'; isLocActive = false;
+        Visualizer::Instance().ClearHistory(); Visualizer::Instance().RecordState("Initial State", 0, dll.captureState(), {});
+        dll.deleteAtIndex(atoi(locBuffer)); Visualizer::Instance().SetStep(0); Visualizer::Instance().SetPlaying(true); locBuffer[0] = '\0'; isLocActive = false;
     }
 }
 
 void DLLState::DrawUpdateMenu(float x, float y) {
-    Color panelBg = UIHelper::GetCanvasBg(config);
-    Color outlineCol = UIHelper::GetOutlineCol(config);
-    Color textCol = UIHelper::GetTextCol(config);
-
+    Color panelBg = UIHelper::GetCanvasBg(config); Color outlineCol = UIHelper::GetOutlineCol(config); Color textCol = UIHelper::GetTextCol(config);
     DrawRectangleRounded({x, y, 480.0f, 130.0f}, 0.1f, 8, panelBg);
     DrawRectangleRoundedLines({x, y, 480.0f, 130.0f}, 0.1f, 8, outlineCol);
-    float fontSize = 24.0f;
 
+    float fontSize = 24.0f;
     Vector2 locTw = MeasureTextEx(g_App->mainFont, "Loc:", fontSize, 1.0f);
     DrawTextEx(g_App->mainFont, "Loc:", {x + 15.0f, y + 15.0f + 20.0f - locTw.y/2.0f}, fontSize, 1.0f, textCol);
     if (GuiTextBox((Rectangle){x + 80.0f, y + 15.0f, 80.0f, 40.0f}, locBuffer, 64, isLocActive)) isLocActive = !isLocActive;
@@ -272,30 +257,25 @@ void DLLState::DrawUpdateMenu(float x, float y) {
     if (GuiTextBox((Rectangle){x + 310.0f, y + 15.0f, 100.0f, 40.0f}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
 
     if (UIHelper::DrawModernBtn({x + 15.0f, y + 70.0f, 250.0f, 40.0f}, "Update Location", true, config) || (IsKeyPressed(KEY_ENTER))) {
-        int start = Visualizer::Instance().GetTotalSteps();
-        dll.updateAtIndex(atoi(locBuffer), atoi(inputBuffer));
-        Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);
+        Visualizer::Instance().ClearHistory(); Visualizer::Instance().RecordState("Initial State", 0, dll.captureState(), {});
+        dll.updateAtIndex(atoi(locBuffer), atoi(inputBuffer)); Visualizer::Instance().SetStep(0); Visualizer::Instance().SetPlaying(true);
         inputBuffer[0] = '\0'; locBuffer[0] = '\0'; isInputActive = false; isLocActive = false;
     }
 }
 
 void DLLState::DrawSearchMenu(float x, float y) {
-    Color panelBg = UIHelper::GetCanvasBg(config);
-    Color outlineCol = UIHelper::GetOutlineCol(config);
-    Color textCol = UIHelper::GetTextCol(config);
-
+    Color panelBg = UIHelper::GetCanvasBg(config); Color outlineCol = UIHelper::GetOutlineCol(config); Color textCol = UIHelper::GetTextCol(config);
     DrawRectangleRounded({x, y, 280.0f, 130.0f}, 0.1f, 8, panelBg);
     DrawRectangleRoundedLines({x, y, 280.0f, 130.0f}, 0.1f, 8, outlineCol);
-    float fontSize = 24.0f;
 
+    float fontSize = 24.0f;
     Vector2 valTw = MeasureTextEx(g_App->mainFont, "Value:", fontSize, 1.0f);
     DrawTextEx(g_App->mainFont, "Value:", {x + 15.0f, y + 15.0f + 20.0f - valTw.y/2.0f}, fontSize, 1.0f, textCol);
     if (GuiTextBox((Rectangle){x + 105.0f, y + 15.0f, 120.0f, 40.0f}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
 
     if (UIHelper::DrawModernBtn({x + 15.0f, y + 70.0f, 210.0f, 40.0f}, "Search Value", true, config) || (IsKeyPressed(KEY_ENTER))) {
-        int start = Visualizer::Instance().GetTotalSteps();
-        dll.searchNode(atoi(inputBuffer));
-        Visualizer::Instance().SetStep(start); Visualizer::Instance().SetPlaying(true);
+        Visualizer::Instance().ClearHistory(); Visualizer::Instance().RecordState("Initial State", 0, dll.captureState(), {});
+        dll.searchNode(atoi(inputBuffer)); Visualizer::Instance().SetStep(0); Visualizer::Instance().SetPlaying(true);
         inputBuffer[0] = '\0'; isInputActive = false;
     }
 }

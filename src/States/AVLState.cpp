@@ -284,10 +284,20 @@ void AVLState::DrawPlayback() {
 }
 
 void AVLState::DrawPseudocode() {
+    const AnimationState& state = Visualizer::Instance().GetCurrentState();
+
     float panelW = 600.0f;
-    float panelH = 200.0f;
+    float lineSpacing = 28.0f;
+    float headerSpace = 55.0f;
+    float bottomPadding = 15.0f;
+
+    // 🌟 DYNAMIC HEIGHT CALCULATION
+    int numLines = state.codeText.empty() ? 1 : state.codeText.size();
+    float calculatedH = headerSpace + (numLines * lineSpacing) + bottomPadding;
+    float panelH = std::max(200.0f, calculatedH); // Ensure it's at least 200px to match the toolbar!
+
     float startX = GetScreenWidth() - panelW;
-    float startY = GetScreenHeight() - panelW/3.0f; // Ensure scaling aligns
+    float startY = GetScreenHeight() - panelH; // Expands upwards!
 
     Color panelBg = config.isDarkMode ? Color{45, 50, 60, 255} : Color{240, 225, 225, 255};
     Color outlineCol = config.isDarkMode ? Color{162, 151, 137, 255} : Color{238, 217, 217, 255};
@@ -295,21 +305,26 @@ void AVLState::DrawPseudocode() {
 
     DrawRectangle(startX, startY, panelW, panelH, panelBg);
     DrawRectangleLines(startX, startY, panelW, panelH, outlineCol);
+
+    // Header
     DrawTextEx(g_App->boldFont, "Pseudocode", {startX + 15.0f, startY + 15.0f}, 24.0f, 1.0f, textCol);
     DrawLine(startX, startY + 45.0f, startX + panelW, startY + 45.0f, outlineCol);
 
-    const AnimationState& state = Visualizer::Instance().GetCurrentState();
     if (state.codeText.empty()) return;
 
     float y = startY + 55.0f;
     for (int i = 0; i < state.codeText.size(); i++) {
         if (i == state.codeLineIndex) {
-            DrawRectangle(startX, y - 2.0f, panelW, 25.0f, config.isDarkMode ? Color{80, 85, 95, 255} : Color{220, 190, 190, 255});
-            DrawTextEx(g_App->mainFont, state.codeText[i].c_str(), {startX + 15.0f, y}, 24.0f, 1.0f, textCol);
+            // Highlight Box
+            DrawRectangle(startX, y - 2.0f, panelW, lineSpacing, config.isDarkMode ? Color{80, 85, 95, 255} : Color{220, 190, 190, 255});
+
+            // 🌟 LOCKED TO 20px, USING BOLD FONT TO POP!
+            DrawTextEx(g_App->boldFont, state.codeText[i].c_str(), {startX + 15.0f, y + 4.0f}, 20.0f, 1.0f, textCol);
         } else {
-            DrawTextEx(g_App->mainFont, state.codeText[i].c_str(), {startX + 15.0f, y}, 20.0f, 1.0f, Fade(textCol, 0.5f));
+            // 🌟 LOCKED TO 20px, FADED
+            DrawTextEx(g_App->mainFont, state.codeText[i].c_str(), {startX + 15.0f, y + 4.0f}, 20.0f, 1.0f, Fade(textCol, 0.6f));
         }
-        y += 25.0f;
+        y += lineSpacing;
     }
 }
 

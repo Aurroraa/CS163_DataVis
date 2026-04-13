@@ -239,14 +239,34 @@ void AVLTree::updateNode(int oldVal, int newVal) {
 }
 
 void AVLTree::searchNode(int value) {
+    std::vector<std::string> code = {
+        "curr = root",                                  // Line 0
+        "while curr is not null:",                      // Line 1
+        "    if val == curr->data: return FOUND",       // Line 2
+        "    if val < curr->data: curr = curr->left",   // Line 3
+        "    else: curr = curr->right",                 // Line 4
+        "return NOT FOUND"                              // Line 5
+    };
+
     AVLNode* curr = root;
-    while (curr) {
-        Visualizer::Instance().RecordState("Comparing...", -1, captureState(curr->data, -1, ORANGE), {});
-        if (curr->data == value) {
-            Visualizer::Instance().RecordState("FOUND!", -1, captureState(curr->data, -1, GREEN), {});
-            return;
-        } else if (value < curr->data) curr = curr->left;
-        else curr = curr->right;
+    if (curr) {
+        Visualizer::Instance().RecordState("Starting search at root", 0, captureState(curr->data, -1, ORANGE), code);
     }
-    Visualizer::Instance().RecordState("NOT FOUND.", -1, captureState(-1, -1, RED), {});
+
+    while (curr) {
+        Visualizer::Instance().RecordState("Comparing...", 1, captureState(curr->data, -1, ORANGE), code);
+
+        if (curr->data == value) {
+            Visualizer::Instance().RecordState("FOUND!", 2, captureState(curr->data, -1, GREEN), code);
+            return;
+        } else if (value < curr->data) {
+            Visualizer::Instance().RecordState("Going left", 3, captureState(curr->data, -1, BLUE), code);
+            curr = curr->left;
+        } else {
+            Visualizer::Instance().RecordState("Going right", 4, captureState(curr->data, -1, BLUE), code);
+            curr = curr->right;
+        }
+    }
+
+    Visualizer::Instance().RecordState("NOT FOUND.", 5, captureState(-1, -1, RED), code);
 }

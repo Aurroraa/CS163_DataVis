@@ -3,9 +3,6 @@
 #include <string>
 #include <vector>
 
-// ---------------------------------------------------------
-// CONSTRUCTOR & DESTRUCTOR (MISSING PART)
-// ---------------------------------------------------------
 DoublyLinkedList::DoublyLinkedList() {
     head = nullptr;
     tail = nullptr;
@@ -22,9 +19,7 @@ DoublyLinkedList::~DoublyLinkedList() {
     tail = nullptr;
 }
 
-// ---------------------------------------------------------
-// HELPER: Count Nodes
-// ---------------------------------------------------------
+
 int DoublyLinkedList::getCount() {
     int count = 0;
     DLLNode* curr = head;
@@ -32,31 +27,24 @@ int DoublyLinkedList::getCount() {
     return count;
 }
 
-// ---------------------------------------------------------
-// 1. CAPTURE STATE (Single Line Layout)
-// ---------------------------------------------------------
+
 std::vector<VisualNode> DoublyLinkedList::captureState(int highlightIndex, Color highlightColor) {
     std::vector<VisualNode> visuals;
     DLLNode* current = head;
     int index = 0;
     int totalNodes = getCount();
 
-    // 1. CONFIGURATION
-    int spacing = 100;          // Standard spacing
+    int spacing = 100;
     int nodeRadius = 30;
 
-    // Safety: If screen is small, shrink spacing
     if (GetScreenWidth() < (totalNodes * spacing) + 100) {
         spacing = (GetScreenWidth() - 100) / (totalNodes > 0 ? totalNodes : 1);
-        if (spacing < 65) spacing = 65; // Don't let them overlap too much
+        if (spacing < 65) spacing = 65;
     }
 
-    // 2. CENTER THE LIST
-    // Calculate total width of the list
     int totalWidth = (totalNodes - 1) * spacing;
-    // Find the starting X that centers this width on screen
     int startX = (GetScreenWidth() - totalWidth) / 2;
-    int fixedY = GetScreenHeight() / 2 - 50; // Center vertically
+    int fixedY = GetScreenHeight() / 2 - 50;
 
     while (current != nullptr) {
         VisualNode v;
@@ -68,7 +56,6 @@ std::vector<VisualNode> DoublyLinkedList::captureState(int highlightIndex, Color
         }
         else v.color = BLUE;
 
-        // 3. POSITIONING
         v.x = startX + (index * spacing);
         v.y = fixedY;
 
@@ -82,11 +69,7 @@ std::vector<VisualNode> DoublyLinkedList::captureState(int highlightIndex, Color
     return visuals;
 }
 
-// ---------------------------------------------------------
-// 2. INIT (With Limit Check)
-// ---------------------------------------------------------
 void DoublyLinkedList::init(std::vector<int> values) {
-    // Clear old list
     DLLNode* current = head;
     while (current != nullptr) {
         DLLNode* next = current->next;
@@ -95,7 +78,6 @@ void DoublyLinkedList::init(std::vector<int> values) {
     }
     head = tail = nullptr;
 
-    // Limit input to 15
     if (values.size() > 15) {
         values.resize(15);
     }
@@ -114,9 +96,7 @@ void DoublyLinkedList::init(std::vector<int> values) {
     Visualizer::Instance().RecordState("Initialized List (Max 15)", 0, captureState(), {});
 }
 
-// ---------------------------------------------------------
-// 3. ADD HEAD
-// ---------------------------------------------------------
+
 void DoublyLinkedList::addHead(int value) {
     if (getCount() >= 15) {
         Visualizer::Instance().RecordState("Error: Max 15 nodes allowed!", 0, captureState(), {});
@@ -147,9 +127,6 @@ void DoublyLinkedList::addHead(int value) {
     Visualizer::Instance().RecordState("Updating Head Pointer", 3, captureState(), code);
 }
 
-// ---------------------------------------------------------
-// 4. ADD TAIL
-// ---------------------------------------------------------
 void DoublyLinkedList::addTail(int value) {
     if (getCount() >= 15) {
         Visualizer::Instance().RecordState("Error: Max 15 nodes allowed!", 0, captureState(), {});
@@ -240,7 +217,7 @@ void DoublyLinkedList::deleteHead() {
     DLLNode* temp = head;
     head = head->next;
     if (head) head->prev = nullptr;
-    else tail = nullptr; // List became empty
+    else tail = nullptr;
 
     delete temp;
 
@@ -261,7 +238,6 @@ void DoublyLinkedList::deleteTail() {
         return;
     }
 
-    // Count size to find the tail index for highlighting
     int tailIdx = 0;
     DLLNode* countTemp = head;
     while (countTemp && countTemp->next) { tailIdx++; countTemp = countTemp->next; }
@@ -271,7 +247,7 @@ void DoublyLinkedList::deleteTail() {
     DLLNode* temp = tail;
     tail = tail->prev;
     if (tail) tail->next = nullptr;
-    else head = nullptr; // List became empty
+    else head = nullptr;
 
     delete temp;
 
@@ -296,7 +272,7 @@ void DoublyLinkedList::deleteAtIndex(int index) {
 
     DLLNode* curr = head;
     for (int i = 0; i < index; i++) {
-        if (!curr->next) break; // Out of bounds prevention
+        if (!curr->next) break;
         Visualizer::Instance().RecordState("Traversing... at index " + std::to_string(i), 1, captureState(i, ORANGE), code);
         curr = curr->next;
     }

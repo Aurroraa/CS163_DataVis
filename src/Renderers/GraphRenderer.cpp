@@ -1,5 +1,5 @@
 #include "../../include/Renderers/GraphRenderer.h"
-#include "../../include/App.h" // 🌟 ADDED APP.H
+#include "../../include/App.h"
 #include "raylib.h"
 #include <string>
 #include <unordered_map>
@@ -8,7 +8,6 @@
 namespace GraphRenderer {
 
     void DrawArrow(Vector2 start, Vector2 end, Color color) {
-        // ... Keep existing logic here ...
         float dx = end.x - start.x;
         float dy = end.y - start.y;
         float length = sqrt(dx*dx + dy*dy);
@@ -91,7 +90,6 @@ namespace GraphRenderer {
                     float weightX = midX + nx * 20.0f; float weightY = midY + ny * 20.0f;
                     std::string weightText = std::to_string(edge.weight);
                     
-                    // 🌟 PERFECTLY CENTERED WEIGHT TEXT
                     Vector2 tw = MeasureTextEx(g_App->mainFont, weightText.c_str(), config.textSize, 1.0f);
                     DrawTextEx(g_App->mainFont, weightText.c_str(), {weightX - tw.x/2.0f, weightY - tw.y/2.0f}, config.textSize, 1.0f, RED);
                 }
@@ -110,16 +108,13 @@ namespace GraphRenderer {
             DrawCircle(node.drawX, node.drawY, config.nodeRadius, currentBorder);
             DrawCircle(node.drawX, node.drawY, config.nodeRadius - config.edgeThickness, nodeBgCol);
 
-            // 🌟 PERFECTLY CENTERED NODE TEXT
             std::string text = std::to_string(node.data);
             Vector2 tw = MeasureTextEx(g_App->mainFont, text.c_str(), config.textSize, 1.0f);
             DrawTextEx(g_App->mainFont, text.c_str(), {node.drawX - tw.x/2.0f, node.drawY - tw.y/2.0f}, config.textSize, 1.0f, textCol);
         }
 
-        // 🌟 BOLD, 24px STATE MESSAGE
-        DrawTextEx(g_App->boldFont, state.message.c_str(), {270.0f, 20.0f}, 24.0f, 1.0f, textCol); // Moved over slightly to not hit graph UI
+        DrawTextEx(g_App->boldFont, state.message.c_str(), {270.0f, 20.0f}, 24.0f, 1.0f, textCol);
 
-        // Dijkstra Tracking Table
         if (!state.table.empty()) {
             float startX = GetScreenWidth() - 420.0f;
             float startY = 20.0f;
@@ -136,7 +131,6 @@ namespace GraphRenderer {
                 for (int c = 0; c < state.table[r].size(); c++) {
                     DrawRectangleLines(currentX, startY + r * rowHeight, colWidths[c], rowHeight, GRAY);
                     
-                    // 🌟 CENTER TEXT IN DIJKSTRA TABLE
                     Vector2 textWidth = MeasureTextEx(g_App->mainFont, state.table[r][c].c_str(), 18.0f, 1.0f);
                     DrawTextEx(g_App->mainFont, state.table[r][c].c_str(), {currentX + (colWidths[c] - textWidth.x) / 2.0f, startY + r * rowHeight + (rowHeight/2.0f) - (textWidth.y/2.0f)}, 18.0f, 1.0f, BLACK);
 
@@ -145,7 +139,6 @@ namespace GraphRenderer {
             }
         }
 
-        // Final Printed Paths
         if (!state.finalPaths.empty()) {
             float boxWidth = 350.0f;
             float boxHeight = 40.0f + (state.finalPaths.size() * 25.0f);

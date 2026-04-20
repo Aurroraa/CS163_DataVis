@@ -18,25 +18,21 @@ void MenuState::Draw() {
     float screenH = GetScreenHeight();
     Vector2 mouse = GetMousePosition();
 
-    // 🌟 MASSIVE TITLE
     const char* title = "CS VISUALIZER";
-    float titleFontSize = 80.0f; // Scaled up!
+    float titleFontSize = 80.0f;
     Vector2 titleSize = MeasureTextEx(g_App->boldFont, title, titleFontSize, 2.0f);
     DrawTextEx(g_App->boldFont, title, {screenW / 2.0f - titleSize.x / 2.0f, screenH * 0.25f}, titleFontSize, 2.0f, PAL_PEACH);
 
-    // 🌟 BIGGER SUBTITLE
     const char* subtitle = "Interactive Data Structures";
-    float subSize = 30.0f; // Scaled up!
+    float subSize = 30.0f;
     Vector2 subTw = MeasureTextEx(g_App->mainFont, subtitle, subSize, 1.0f);
     DrawTextEx(g_App->mainFont, subtitle, {screenW / 2.0f - subTw.x / 2.0f, screenH * 0.25f + 100.0f}, subSize, 1.0f, PAL_PINK);
 
-    // 🌟 CHUNKIER BUTTONS
     float btnW = 300.0f;
     float btnH = 70.0f;
     float btnX = screenW / 2.0f - btnW / 2.0f;
     float btnFontSize = 32.0f;
 
-    // Start Button
     Rectangle startBtn = {btnX, screenH * 0.5f, btnW, btnH};
     bool startHover = CheckCollisionPointRec(mouse, startBtn);
     DrawRectangleRounded(startBtn, 0.4f, 8, startHover ? PAL_PINK : PAL_MID);
@@ -50,7 +46,6 @@ void MenuState::Draw() {
         return;
     }
 
-    // Exit Button
     Rectangle exitBtn = {btnX, screenH * 0.65f, btnW, btnH};
     bool exitHover = CheckCollisionPointRec(mouse, exitBtn);
     DrawRectangleRounded(exitBtn, 0.4f, 8, exitHover ? PAL_PINK : PAL_MID);

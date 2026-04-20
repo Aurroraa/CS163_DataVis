@@ -118,14 +118,12 @@ AVLNode *AVLTree::insertNode(AVLNode *node, int value) {
 
     std::vector<std::string> code = {"BST Insert", "Update Height", "Check Balance", "Rotate if needed"};
 
-    // 1. TOP-DOWN SEARCH: Highlight the current node we are comparing against!
     Visualizer::Instance().RecordState("Comparing " + std::to_string(value) + " with " + std::to_string(node->data), 0, captureState(node->data, -1, ORANGE), code);
 
     if (value < node->data) {
         bool wasNull = (node->left == nullptr);
         node->left = insertNode(node->left, value);
         if (wasNull) {
-            // Highlight the newly inserted node!
             Visualizer::Instance().RecordState("Inserted " + std::to_string(value), 0, captureState(value, -1, GREEN), code);
         }
     }
@@ -133,13 +131,11 @@ AVLNode *AVLTree::insertNode(AVLNode *node, int value) {
         bool wasNull = (node->right == nullptr);
         node->right = insertNode(node->right, value);
         if (wasNull) {
-            // Highlight the newly inserted node!
             Visualizer::Instance().RecordState("Inserted " + std::to_string(value), 0, captureState(value, -1, GREEN), code);
         }
     }
-    else return node; // No duplicates allowed
+    else return node;
 
-    // 2. BOTTOM-UP BACKTRACK: Moving up to ancestors one by one as recursion unwinds!
     node->height = std::max(height(node->right), height(node->left)) + 1;
     int balanceFactor = getBalanceFactor(node);
 
@@ -171,7 +167,6 @@ AVLNode *AVLTree::insertNode(AVLNode *node, int value) {
     return node;
 }
 
-// Helper to find the Inorder Successor
 AVLNode* AVLTree::minValueNode(AVLNode* node) {
     AVLNode* current = node;
     while (current && current->left != nullptr) {
@@ -192,7 +187,6 @@ AVLNode* AVLTree::deleteNodeHelper(AVLNode* node, int value) {
     std::vector<std::string> code = {"Search", "If leaf: Delete", "If 1 child: Replace", "If 2 child: Swap successor & delete", "Update Heights", "Balance & Rotate"};
     if (!node) return node;
 
-    // TOP-DOWN SEARCH
     Visualizer::Instance().RecordState("Searching... at " + std::to_string(node->data), 0, captureState(node->data, -1, ORANGE), code);
 
     if (value < node->data) node->left = deleteNodeHelper(node->left, value);
@@ -222,7 +216,6 @@ AVLNode* AVLTree::deleteNodeHelper(AVLNode* node, int value) {
     node->height = 1 + std::max(height(node->left), height(node->right));
     int balance = getBalanceFactor(node);
 
-    // BOTTOM-UP BACKTRACK
     Visualizer::Instance().RecordState("Moving up to ancestor " + std::to_string(node->data) + ". Balance Factor is " + std::to_string(balance), 4, captureState(node->data, -1, PURPLE), code);
 
     if (balance > 1 && getBalanceFactor(node->left) >= 0) return rightRotate(node);
@@ -240,12 +233,12 @@ void AVLTree::updateNode(int oldVal, int newVal) {
 
 void AVLTree::searchNode(int value) {
     std::vector<std::string> code = {
-        "curr = root",                                  // Line 0
-        "while curr is not null:",                      // Line 1
-        "    if val == curr->data: return FOUND",       // Line 2
-        "    if val < curr->data: curr = curr->left",   // Line 3
-        "    else: curr = curr->right",                 // Line 4
-        "return NOT FOUND"                              // Line 5
+        "curr = root",
+        "while curr is not null:",
+        "    if val == curr->data: return FOUND",
+        "    if val < curr->data: curr = curr->left",
+        "    else: curr = curr->right",
+        "return NOT FOUND"
     };
 
     AVLNode* curr = root;

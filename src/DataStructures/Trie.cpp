@@ -207,7 +207,6 @@ void Trie::updateWord(std::string word, int newSize) {
     std::string cleanWord = "";
     for (char c : word) if (isalpha(c)) cleanWord += tolower(c);
 
-    // Safety check: Don't allow invalid sizes
     if (cleanWord.empty() || newSize <= 0 || newSize > cleanWord.length()) {
         Visualizer::Instance().RecordState("Invalid update parameters!", -1, captureState(), {});
         return;

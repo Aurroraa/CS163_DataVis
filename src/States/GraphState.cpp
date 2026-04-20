@@ -32,17 +32,14 @@ void GraphState::Update() {
     float canvasWidth = GetScreenWidth() - 260.0f;
     float canvasHeight = GetScreenHeight() - 200.0f;
 
-    // 1. LIVE PARSER DETECTOR
     std::string currentText(textEditorBuffer);
     if (currentText != lastText) {
         lastText = currentText;
-        isAlgorithmActive = false; // 🌟 Editing text returns to Sandbox Mode!
+        isAlgorithmActive = false;
         Visualizer::Instance().ClearHistory();
         graph.initFromLiveText(currentText, isDirected, canvasStartX, canvasStartY, canvasWidth, canvasHeight);
     }
 
-    // 2. PHYSICS & DRAGGING ENGINE
-    // 🌟 ONLY run physics if we are NOT looking at an algorithm!
     if (!isAlgorithmActive) {
         Vector2 mousePos = GetMousePosition();
         bool isHoveringCanvas = (mousePos.x > canvasStartX && mousePos.y < canvasHeight);
@@ -83,7 +80,6 @@ void GraphState::Update() {
         Visualizer::Instance().RecordState("", 0, graph.captureState(), {});
     }
     else {
-        // 🌟 If Algorithm is active, clicking the canvas cancels it and returns to Sandbox!
         Vector2 mousePos = GetMousePosition();
         if ((mousePos.x > canvasStartX && mousePos.y < canvasHeight) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             isAlgorithmActive = false;
@@ -96,7 +92,6 @@ void GraphState::Draw() {
     float canvasStartX = 260.0f;
     float canvasHeight = GetScreenHeight() - 200.0f;
 
-    // --- 🌟 EXTRACT EXACT PALETTE COLORS ---
     Color canvasBg = config.isDarkMode ? Color{35, 41, 49, 255} : Color{250, 250, 250, 255};
     Color panelBg = config.isDarkMode ? Color{57, 62, 70, 255} : Color{245, 232, 232, 255};
     Color textCol = config.isDarkMode ? Color{226, 215, 193, 255} : Color{40, 40, 40, 255};
@@ -108,7 +103,6 @@ void GraphState::Draw() {
     DrawRectangle(0, 0, 260, canvasHeight, panelBg);
     DrawLine(260, 0, 260, canvasHeight, outlineCol);
 
-    // 🌟 BIGGER DIRECTED GRAPH CHECKBOX (24x24 instead of 20x20, and shifted down)
     bool prevDirected = isDirected;
     GuiCheckBox((Rectangle){15, 15, 24, 24}, " Directed Graph", &isDirected);
     if (isDirected != prevDirected) {
@@ -118,7 +112,6 @@ void GraphState::Draw() {
 
     DrawTextEx(g_App->boldFont, "Graph Data:", {10.0f, 45.0f}, 21.0f, 1.0f, textCol);
 
-    // 🌟 ADVANCED MULTI-LINE TEXT BOX WITH CURSOR & CLIPBOARD
     Rectangle textBoxRect = { 0, 70, 260, canvasHeight - 70.0f };
     Vector2 mousePos = GetMousePosition();
     bool clicked = IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
@@ -127,27 +120,24 @@ void GraphState::Draw() {
     static bool selectAll = false;
     int textLen = strlen(textEditorBuffer);
 
-    // Safety bounds
     if (cursorPos > textLen) cursorPos = textLen;
     if (cursorPos < 0) cursorPos = 0;
 
-    // 1. Handle Mouse Click Focus
     if (clicked) {
         isEditorActive = CheckCollisionPointRec(mousePos, textBoxRect);
     }
 
-    // 2. Handle Keyboard Input & Clipboard
     if (isEditorActive) {
         bool ctrlDown = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
 
         if (ctrlDown) {
             if (IsKeyPressed(KEY_A)) selectAll = true;
             if (IsKeyPressed(KEY_C) || IsKeyPressed(KEY_X)) {
-                SetClipboardText(textEditorBuffer); // OS Copy
+                SetClipboardText(textEditorBuffer);
                 if (IsKeyPressed(KEY_X)) { textEditorBuffer[0] = '\0'; cursorPos = 0; textLen = 0; selectAll = false; }
             }
             if (IsKeyPressed(KEY_V)) {
-                const char* clip = GetClipboardText(); // OS Paste
+                const char* clip = GetClipboardText();
                 if (clip) {
                     if (selectAll) { textEditorBuffer[0] = '\0'; cursorPos = 0; textLen = 0; selectAll = false; }
                     int clipLen = strlen(clip);
@@ -159,7 +149,6 @@ void GraphState::Draw() {
                 }
             }
         } else {
-            // Typing Letters
             int key = GetCharPressed();
             while (key > 0) {
                 if ((key >= 32) && (key <= 125) && (textLen < 2047)) {
@@ -171,7 +160,6 @@ void GraphState::Draw() {
                 key = GetCharPressed();
             }
 
-            // Enter Key
             if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_KP_ENTER)) {
                 if (selectAll) { textEditorBuffer[0] = '\0'; cursorPos = 0; textLen = 0; selectAll = false; }
                 if (textLen < 2047) {
@@ -181,7 +169,6 @@ void GraphState::Draw() {
                 }
             }
 
-            // Backspace Key
             if (IsKeyPressed(KEY_BACKSPACE)) {
                 if (selectAll) {
                     textEditorBuffer[0] = '\0'; cursorPos = 0; selectAll = false;
@@ -191,25 +178,21 @@ void GraphState::Draw() {
                 }
             }
 
-            // Arrow Keys Navigation
             if (IsKeyPressed(KEY_LEFT) && cursorPos > 0) { cursorPos--; selectAll = false; }
             if (IsKeyPressed(KEY_RIGHT) && cursorPos < textLen) { cursorPos++; selectAll = false; }
         }
     }
 
-    // --- DRAWING & MOUSE MAPPING ---
     Color editorBg = config.isDarkMode ? Color{45, 50, 60, 255} : WHITE;
     Color editorSelectBg = config.isDarkMode ? Color{70, 90, 120, 255} : Color{220, 235, 255, 255};
     Color gutterBg = config.isDarkMode ? Color{35, 41, 49, 255} : Color{230, 230, 230, 255};
     Color gutterText = config.isDarkMode ? Fade(textCol, 0.5f) : DARKGRAY;
     Color activeLineBg = config.isDarkMode ? Color{65, 70, 80, 255} : Color{240, 245, 255, 255};
 
-    // 🌟 2. APPLY THE BACKGROUNDS
     DrawRectangleRec(textBoxRect, selectAll ? editorSelectBg : editorBg);
     Rectangle gutterRect = {textBoxRect.x, textBoxRect.y, 40, textBoxRect.height};
     DrawRectangleRec(gutterRect, gutterBg);
 
-    // Parse lines to draw them individually
     std::vector<std::string> lines;
     std::string currentLineText = "";
     for (int i = 0; i < strlen(textEditorBuffer); i++) {
@@ -255,7 +238,6 @@ void GraphState::Draw() {
             }
         }
 
-        // 🌟 PIXEL PERFECT CURSOR POSITION
         if (cursorPos >= charCounter && cursorPos <= charCounter + lines[i].length()) {
             std::string subStr = lines[i].substr(0, cursorPos - charCounter);
             cursorPixelX = gutterRect.width + 10.0f + MeasureTextEx(g_App->mainFont, subStr.c_str(), 18.0f, 1.0f).x;
@@ -264,33 +246,28 @@ void GraphState::Draw() {
         charCounter += lines[i].length() + 1;
     }
 
-    // Handle clicking below the last line of text
     if (clicked && isEditorActive && mousePos.y >= textBoxRect.y + lines.size() * 22) {
         cursorPos = textLen;
         selectAll = false;
     }
 
-    // Draw Blinking Cursor exactly where it belongs!
     if (isEditorActive && !selectAll && (int)(GetTime() * 2) % 2 == 0) {
         DrawLine(cursorPixelX, cursorPixelY + 2, cursorPixelX, cursorPixelY + 20, textCol);
     }
 
-    // ... inside GraphState::Draw(), right before the Home button logic ...
 
-    // 🌟 CUSTOM EYE-CATCHING HOME BUTTON (BUMPED TO 24px AND PERFECTLY CENTERED)
     float btnX = GetScreenWidth() - 150.0f;
     float homeBtnX = btnX - 110.0f;
     Rectangle homeRect = {homeBtnX, 10.0f, 90.0f, 36.0f};
     bool hoverHome = CheckCollisionPointRec(mousePos, homeRect);
 
-    // Draw rounded background (Accent color if hovered)
     Color homeBg = hoverHome ? (config.isDarkMode ? Color{162, 151, 137, 255} : Color{242, 182, 182, 255}) : Fade(textCol, 0.1f);
     DrawRectangleRounded(homeRect, 0.5f, 8, homeBg);
     DrawRectangleRoundedLines(homeRect, 0.5f, 8, textCol);
 
     float homeFontSize = 24.0f;
     Vector2 textW = MeasureTextEx(g_App->mainFont, "Home", homeFontSize, 1.0f);
-    // 🌟 Perfect Y-centering formula applied!
+
     DrawTextEx(g_App->mainFont, "Home",
         {homeRect.x + homeRect.width/2.0f - textW.x/2.0f, homeRect.y + homeRect.height/2.0f - textW.y/2.0f},
         homeFontSize, 1.0f, hoverHome ? (config.isDarkMode ? BLACK : WHITE) : textCol);
@@ -304,7 +281,6 @@ void GraphState::Draw() {
     DrawPseudocode();
     DrawPlayback();
 
-    // Hamburger Menu
     btnX = GetScreenWidth() - 150.0f;
     Rectangle burgerRect = {btnX, 10.0f, 40.0f, 30.0f};
     mousePos = GetMousePosition();
@@ -349,7 +325,6 @@ void GraphState::DrawToolbar() {
 
         Color labelCol = isPrimary ? (config.isDarkMode ? BLACK : WHITE) : textCol;
 
-        // 🌟 BUMPED TO 24px!
         float fontSize = 24.0f;
         Vector2 tw = MeasureTextEx(g_App->mainFont, text, fontSize, 1.0f);
         DrawTextEx(g_App->mainFont, text,
@@ -361,7 +336,6 @@ void GraphState::DrawToolbar() {
 
     float x = 30.0f; float y = startY + 25.0f;
 
-    // --- 🚀 ALGORITHM GROUP (LEFT SIDE) ---
     DrawTextEx(g_App->boldFont, "Algorithms", {x, y}, 24.0f, 1.0f, textCol);
     DrawLine(x, y + 28.0f, x + 250.0f, y + 28.0f, outlineCol);
 
@@ -373,7 +347,6 @@ void GraphState::DrawToolbar() {
         Visualizer::Instance().SetPlaying(true);
     }
 
-    // Centered label alignment with textbox
     Vector2 srcTw = MeasureTextEx(g_App->mainFont, "Src:", 24.0f, 1.0f);
     float labelY = (y + 95.0f + 20.0f) - (srcTw.y / 2.0f);
     DrawTextEx(g_App->mainFont, "Src:", {x + 5.0f, labelY}, 24.0f, 1.0f, textCol);
@@ -397,7 +370,6 @@ void GraphState::DrawToolbar() {
         }
     }
 
-    // --- 🛠️ UTILITY GROUP (RIGHT SIDE) ---
     float rx = 320.0f;
     DrawTextEx(g_App->boldFont, "Sandbox Tools", {rx, y}, 24.0f, 1.0f, textCol);
     DrawLine(rx, y + 28.0f, rx + 400.0f, y + 28.0f, outlineCol);
@@ -457,7 +429,6 @@ void GraphState::DrawPlayback() {
         DrawRectangleRounded(rect, 0.4f, 8, bg);
         DrawRectangleRoundedLines(rect, 0.4f, 8, outlineCol);
 
-        // 🌟 BUMPED TO 24px AND PERFECTLY CENTERED
         float fontSize = 24.0f;
         Vector2 tw = MeasureTextEx(g_App->mainFont, text, fontSize, 1.0f);
         DrawTextEx(g_App->mainFont, text,
@@ -483,7 +454,6 @@ void GraphState::DrawPlayback() {
 void GraphState::DrawPseudocode() {
     const AnimationState& state = Visualizer::Instance().GetCurrentState();
 
-    // 🌟 LOCKED DIMENSIONS
     float panelW = 600.0f;
     float panelH = 200.0f;
     float startX = GetScreenWidth() - panelW;
@@ -493,40 +463,33 @@ void GraphState::DrawPseudocode() {
     Color outlineCol = config.isDarkMode ? Color{162, 151, 137, 255} : Color{238, 217, 217, 255};
     Color textCol = config.isDarkMode ? Color{226, 215, 193, 255} : Color{40, 40, 40, 255};
 
-    // Draw Base Panel
     DrawRectangle(startX, startY, panelW, panelH, panelBg);
     DrawRectangleLines(startX, startY, panelW, panelH, outlineCol);
 
-    // Draw Header (Drawn BEFORE scissor mode so it never scrolls!)
     DrawTextEx(g_App->boldFont, "Pseudocode", {startX + 15.0f, startY + 15.0f}, 24.0f, 1.0f, textCol);
     DrawLine(startX, startY + 45.0f, startX + panelW, startY + 45.0f, outlineCol);
 
     if (state.codeText.empty()) return;
 
-    // --- 🌟 AUTO-SCROLL MATH ---
     float lineSpacing = 28.0f;
-    float viewableH = panelH - 55.0f; // Space below the header
+    float viewableH = panelH - 55.0f;
     float contentH = state.codeText.size() * lineSpacing;
 
-    static float scrollY = 0.0f; // Keeps track of our scroll position
+    static float scrollY = 0.0f;
     float activeY = state.codeLineIndex * lineSpacing;
 
-    // Calculate where we need to scroll to keep the active line vertically centered
     float targetScroll = activeY - (viewableH / 2.0f) + (lineSpacing / 2.0f);
 
-    // Clamp the scrolling so it doesn't scroll past the top or bottom
     if (targetScroll < 0) targetScroll = 0;
     if (targetScroll > contentH - viewableH && contentH > viewableH) targetScroll = contentH - viewableH;
     if (contentH <= viewableH) targetScroll = 0;
 
-    // Smooth LERP (Linear Interpolation) for that premium sliding animation!
     scrollY += (targetScroll - scrollY) * 0.1f;
 
-    // --- 🌟 START CLIPPING MASK ---
-    // Anything drawn after this line will be hidden if it goes outside the box!
+
     BeginScissorMode(startX, startY + 46, panelW, panelH - 46);
 
-    float y = startY + 55.0f - scrollY; // Apply the scroll offset to the starting Y
+    float y = startY + 55.0f - scrollY;
 
     for (int i = 0; i < state.codeText.size(); i++) {
         if (i == state.codeLineIndex) {
@@ -538,7 +501,6 @@ void GraphState::DrawPseudocode() {
         y += lineSpacing;
     }
 
-    // --- 🌟 END CLIPPING MASK ---
     EndScissorMode();
 }
 
@@ -560,7 +522,6 @@ void GraphState::DrawSettingsModal() {
 
     GuiCheckBox((Rectangle){startX + 30.0f, startY + 80.0f, 24.0f, 24.0f}, " Dark Mode", &config.isDarkMode);
 
-    // 🌟 DYNAMICALLY CENTERED LABELS FOR 20px SLIDERS
     float lblSize = 22.0f;
 
     Vector2 radTw = MeasureTextEx(g_App->mainFont, "Node Radius", lblSize, 1.0f);

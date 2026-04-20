@@ -9,9 +9,9 @@ std::vector<VisualNode> MinHeap::captureState(int h1, int h2, Color highlightCol
 
     for (int i = 0; i < data.size(); i++) {
         VisualNode v;
-        v.id = data[i].id;        // UNIQUE ID for animation
-        v.highlightIndex = i;     // ARRAY INDEX for renderer
-        v.data = data[i].value;   // ACTUAL VALUE
+        v.id = data[i].id;
+        v.highlightIndex = i;
+        v.data = data[i].value;
 
         if (i == h1 || i == h2) v.color = highlightCol;
         else v.color = BLUE;
@@ -36,7 +36,7 @@ std::vector<VisualNode> MinHeap::captureState(int h1, int h2, Color highlightCol
 
 void MinHeap::init(std::vector<int> values) {
     data.clear();
-    nextNodeId = 0; // Reset IDs
+    nextNodeId = 0;
     Visualizer::Instance().RecordState("Cleared Heap", 0, captureState(), {});
 
     for (int i = 0; i < values.size(); i++) insert(values[i]);
@@ -44,100 +44,90 @@ void MinHeap::init(std::vector<int> values) {
     Visualizer::Instance().RecordState("Heap Initialization Complete", 0, captureState(), {});
 }
 
-// ---------------------------------------------------------
-// INSERT & HEAPIFY UP
-// ---------------------------------------------------------
+
 void MinHeap::insert(int value) {
     data.push_back({value, nextNodeId++});
 
-    // The FULL code block for Insertion
     vector<string> code = {
-        "heap.push_back(val)",                           // Line 0
-        "cur = heap.size() - 1",                         // Line 1
-        "while (cur > 0 && heap[par] > heap[cur]) {",    // Line 2
-        "    swap(heap[cur], heap[par])",                // Line 3
-        "    cur = par",                                 // Line 4
-        "}"                                              // Line 5
+        "heap.push_back(val)",
+        "cur = heap.size() - 1",
+        "while (cur > 0 && heap[par] > heap[cur]) {",
+        "    swap(heap[cur], heap[par])",
+        "    cur = par",
+        "}"
     };
 
-    // Pass Line 0
     Visualizer::Instance().RecordState("Inserted " + to_string(value) + " at end", 0, captureState(data.size() - 1, -1, GREEN), code);
 
     heapifyUp(data.size() - 1);
 }
 
 void MinHeap::heapifyUp(int index) {
-    // Exact same block as insert so the UI doesn't flicker
     vector<string> code = {
-        "heap.push_back(val)",                           // Line 0
-        "cur = heap.size() - 1",                         // Line 1
-        "while (cur > 0 && heap[par] > heap[cur]) {",    // Line 2
-        "    swap(heap[cur], heap[par])",                // Line 3
-        "    cur = par",                                 // Line 4
-        "}"                                              // Line 5
+        "heap.push_back(val)",
+        "cur = heap.size() - 1",
+        "while (cur > 0 && heap[par] > heap[cur]) {",
+        "    swap(heap[cur], heap[par])",
+        "    cur = par",
+        "}"
     };
 
     while (index > 0) {
         int par = (index - 1) / 2;
 
-        // Pass Line 2 (While Loop)
         Visualizer::Instance().RecordState("Comparing " + to_string(data[index].value) + " and " + to_string(data[par].value), 2, captureState(index, par, ORANGE), code );
 
         if (data[index].value < data[par].value) {
             swap(data[index], data[par]);
-            // Pass Line 3 (Swap)
             Visualizer::Instance().RecordState("Swapped!", 3, captureState(index, par, GREEN), code);
             index = par;
         } else {
-            // Pass Line 5 (End)
             Visualizer::Instance().RecordState("Heap property satisfied.", 5, captureState(), code);
             break;
         }
     }
 }
 
-// ---------------------------------------------------------
-// EXTRACT MIN & HEAPIFY DOWN
-// ---------------------------------------------------------
+
 void MinHeap::extractMin() {
     if (data.empty()) return;
 
     vector<string> code = {
-        "if (heap.empty()) return",                      // Line 0
-        "swap(heap[0], heap[last])",                     // Line 1
-        "heap.pop_back()",                               // Line 2
-        "heapifyDown(0)"                                 // Line 3
+        "if (heap.empty()) return",
+        "swap(heap[0], heap[last])",
+        "heap.pop_back()",
+        "heapifyDown(0)"
     };
 
     if (data.size() == 1) {
-        Visualizer::Instance().RecordState("Extracting root", 2, captureState(0, -1, RED), code); // Line 2
+        Visualizer::Instance().RecordState("Extracting root", 2, captureState(0, -1, RED), code);
         data.pop_back();
         Visualizer::Instance().RecordState("Heap is empty", 3, captureState(), code);
         return;
     }
 
     int lastIdx = data.size() - 1;
-    Visualizer::Instance().RecordState("Swapping Root with Last Element", 1, captureState(0, lastIdx, ORANGE), code); // Line 1
+    Visualizer::Instance().RecordState("Swapping Root with Last Element", 1, captureState(0, lastIdx, ORANGE), code);
     swap(data[0], data[lastIdx]);
 
-    Visualizer::Instance().RecordState("Root and Last Swapped", 2, captureState(0, lastIdx, GREEN), code); // Line 2
+    Visualizer::Instance().RecordState("Root and Last Swapped", 2, captureState(0, lastIdx, GREEN), code);
     data.pop_back();
 
-    Visualizer::Instance().RecordState("Extracted minimum value", 3, captureState(), code); // Line 3
+    Visualizer::Instance().RecordState("Extracted minimum value", 3, captureState(), code);
     heapifyDown(0);
 }
 
 void MinHeap::heapifyDown(int index) {
     vector<string> code = {
-        "smallest = cur",                                // Line 0
-        "if (left < size && heap[left] < heap[smallest])", // Line 1
-        "    smallest = left",                           // Line 2
-        "if (right < size && heap[right] < heap[smallest])",// Line 3
-        "    smallest = right",                          // Line 4
-        "if (smallest != cur) {",                        // Line 5
-        "    swap(heap[cur], heap[smallest])",           // Line 6
-        "    heapifyDown(smallest)",                     // Line 7
-        "}"                                              // Line 8
+        "smallest = cur",
+        "if (left < size && heap[left] < heap[smallest])",
+        "    smallest = left",
+        "if (right < size && heap[right] < heap[smallest])",
+        "    smallest = right",
+        "if (smallest != cur) {",
+        "    swap(heap[cur], heap[smallest])",
+        "    heapifyDown(smallest)",
+        "}"
     };
 
     int size = data.size();
@@ -147,108 +137,101 @@ void MinHeap::heapifyDown(int index) {
         int right = 2 * index + 2;
         int smallest = index;
 
-        Visualizer::Instance().RecordState("Finding smallest child...", 1, captureState(index, -1, ORANGE), code); // Line 1
+        Visualizer::Instance().RecordState("Finding smallest child...", 1, captureState(index, -1, ORANGE), code);
 
         if (left < size && data[left].value < data[smallest].value) smallest = left;
         if (right < size && data[right].value < data[smallest].value) smallest = right;
 
         if (smallest != index) {
-            Visualizer::Instance().RecordState("Comparing parent with smallest child", 5, captureState(index, smallest, ORANGE), code); // Line 5
+            Visualizer::Instance().RecordState("Comparing parent with smallest child", 5, captureState(index, smallest, ORANGE), code);
             swap(data[index], data[smallest]);
-            Visualizer::Instance().RecordState("Swapped!", 6, captureState(index, smallest, GREEN), code); // Line 6
+            Visualizer::Instance().RecordState("Swapped!", 6, captureState(index, smallest, GREEN), code);
             index = smallest;
         } else {
-            Visualizer::Instance().RecordState("Heap property satisfied.", 8, captureState(), code); // Line 8
+            Visualizer::Instance().RecordState("Heap property satisfied.", 8, captureState(), code);
             break;
         }
     }
 }
 
-// ---------------------------------------------------------
-// DELETE AT INDEX
-// ---------------------------------------------------------
+
 void MinHeap::deleteNode(int index) {
     if (index < 0 || index >= data.size()) {
         Visualizer::Instance().RecordState("Index out of bounds!", 0, captureState(), {}); return;
     }
 
     vector<string> code = {
-        "swap(heap[index], heap[last])",                 // Line 0
-        "heap.pop_back()",                               // Line 1
-        "if (heap[index] < heap[parent])",               // Line 2
-        "    heapifyUp(index)",                          // Line 3
-        "else",                                          // Line 4
-        "    heapifyDown(index)"                         // Line 5
+        "swap(heap[index], heap[last])",
+        "heap.pop_back()",
+        "if (heap[index] < heap[parent])",
+        "    heapifyUp(index)",
+        "else",
+        "    heapifyDown(index)"
     };
 
     if (index == data.size() - 1) {
-        Visualizer::Instance().RecordState("Deleting last element", 1, captureState(index, -1, RED), code); // Line 1
+        Visualizer::Instance().RecordState("Deleting last element", 1, captureState(index, -1, RED), code);
         data.pop_back();
         Visualizer::Instance().RecordState("Deleted", 1, captureState(), code);
         return;
     }
 
     int lastIdx = data.size() - 1;
-    Visualizer::Instance().RecordState("Swapping with last node", 0, captureState(index, lastIdx, ORANGE), code); // Line 0
+    Visualizer::Instance().RecordState("Swapping with last node", 0, captureState(index, lastIdx, ORANGE), code);
     swap(data[index], data[lastIdx]);
 
-    Visualizer::Instance().RecordState("Removing last node...", 1, captureState(index, lastIdx, RED), code); // Line 1
+    Visualizer::Instance().RecordState("Removing last node...", 1, captureState(index, lastIdx, RED), code);
     data.pop_back();
 
-    Visualizer::Instance().RecordState("Checking where to Heapify...", 2, captureState(index, -1, BLUE), code); // Line 2
+    Visualizer::Instance().RecordState("Checking where to Heapify...", 2, captureState(index, -1, BLUE), code);
 
     int parent = (index - 1) / 2;
     if (index > 0 && data[index].value < data[parent].value) heapifyUp(index);
     else heapifyDown(index);
 }
 
-// ---------------------------------------------------------
-// UPDATE AT INDEX
-// ---------------------------------------------------------
 void MinHeap::updateNode(int index, int newValue) {
     if (index < 0 || index >= data.size()) {
         Visualizer::Instance().RecordState("Index out of bounds!", 0, captureState(), {}); return;
     }
     vector<string> code = {
-        "heap[index] = newValue",                        // Line 0
-        "if (heap[index] < heap[parent])",               // Line 1
-        "    heapifyUp(index)",                          // Line 2
-        "else",                                          // Line 3
-        "    heapifyDown(index)"                         // Line 4
+        "heap[index] = newValue",
+        "if (heap[index] < heap[parent])",
+        "    heapifyUp(index)",
+        "else",
+        "    heapifyDown(index)"
     };
 
     int oldVal = data[index].value;
     data[index].value = newValue;
-    Visualizer::Instance().RecordState("Value changed from " + to_string(oldVal) + " to " + to_string(newValue), 0, captureState(index, -1, GREEN), code); // Line 0
+    Visualizer::Instance().RecordState("Value changed from " + to_string(oldVal) + " to " + to_string(newValue), 0, captureState(index, -1, GREEN), code);
 
-    Visualizer::Instance().RecordState("Checking where to Heapify...", 1, captureState(index, -1, BLUE), code); // Line 1
+    Visualizer::Instance().RecordState("Checking where to Heapify...", 1, captureState(index, -1, BLUE), code);
 
     int parent = (index - 1) / 2;
     if (index > 0 && data[index].value < data[parent].value) heapifyUp(index);
     else heapifyDown(index);
 }
 
-// ---------------------------------------------------------
-// SEARCHING
-// ---------------------------------------------------------
+
 void MinHeap::searchNode(int value) {
     vector<string> code = {
-        "for (int i = 0; i < heap.size(); i++) {",       // Line 0
-        "    if (heap[i] == val)",                       // Line 1
-        "        return FOUND",                          // Line 2
-        "}",                                             // Line 3
-        "return NOT_FOUND"                               // Line 4
+        "for (int i = 0; i < heap.size(); i++) {",
+        "    if (heap[i] == val)",
+        "        return FOUND",
+        "}",
+        "return NOT_FOUND"
     };
 
     for (int i = 0; i < data.size(); i++) {
-        Visualizer::Instance().RecordState("Checking index " + to_string(i), 0, captureState(i, -1, ORANGE), code); // Line 0
+        Visualizer::Instance().RecordState("Checking index " + to_string(i), 0, captureState(i, -1, ORANGE), code);
 
         if (data[i].value == value) {
-            Visualizer::Instance().RecordState("Found " + to_string(value) + " at index " + to_string(i) + "!", 2, captureState(i, -1, GREEN), code); // Line 2
+            Visualizer::Instance().RecordState("Found " + to_string(value) + " at index " + to_string(i) + "!", 2, captureState(i, -1, GREEN), code);
             return;
         }
     }
-    Visualizer::Instance().RecordState("Value not found in Heap.", 4, captureState(), code); // Line 4
+    Visualizer::Instance().RecordState("Value not found in Heap.", 4, captureState(), code);
 }
 
 void MinHeap::searchPosition(int index) {

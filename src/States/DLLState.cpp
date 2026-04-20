@@ -32,28 +32,22 @@ void DLLState::Update() {
 }
 
 void DLLState::Draw() {
-    // 1. Themed Canvas
     DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight() - 200, UIHelper::GetCanvasBg(config));
     Visualizer::Instance().DrawCanvas();
 
-    // 2. Custom Home Button & Hamburger Menu
     Color textCol = UIHelper::GetTextCol(config);
     float btnX = GetScreenWidth() - 150;
 
-    // Home Button
     float homeBtnX = btnX - 110;
     Rectangle homeRect = {homeBtnX, 10, 90, 36};
     if (UIHelper::DrawModernBtn(homeRect, "Home", false, config)) {
         g_App->ChangeState(new SelectState());
     }
 
-    // Hamburger Menu
     if (UIHelper::DrawHamburgerBtn({btnX, 10, 40, 36}, config)) isSettingsOpen = !isSettingsOpen;
 
-    // 3. Draw Data Structure
     DLLRenderer::Draw(Visualizer::Instance().GetRenderState(), config);
 
-    // 4. UI Components
     DrawToolbar();
     DrawPlayback();
     DrawPseudocode();
@@ -64,7 +58,6 @@ void DLLState::Draw() {
 void DLLState::DrawToolbar() {
     float startY = GetScreenHeight() - 200;
 
-    // Draw Themed Toolbar Background
     DrawRectangle(0, startY, GetScreenWidth(), 200, UIHelper::GetPanelBg(config));
     DrawLine(0, startY, GetScreenWidth(), startY, UIHelper::GetOutlineCol(config));
 
@@ -72,9 +65,6 @@ void DLLState::DrawToolbar() {
 
     #define CLOSE_ALL_MENUS() showInitMenu = showAddMenu = showDeleteMenu = showUpdateMenu = showSearchMenu = false;
 
-    // --- ROW 1: MAIN NAVIGATION ---
-    // Notice how we pass the 'showMenu' boolean as the 'isPrimary' flag!
-    // This makes the button light up when its menu is active!
     if (UIHelper::DrawModernBtn({x, startY + 10, (float)btnWidth, 40}, "Init", showInitMenu, config)) {
         bool wasOpen = showInitMenu; CLOSE_ALL_MENUS(); showInitMenu = !wasOpen;
     } x += btnWidth + gap;
@@ -95,7 +85,6 @@ void DLLState::DrawToolbar() {
         bool wasOpen = showSearchMenu; CLOSE_ALL_MENUS(); showSearchMenu = !wasOpen;
     }
 
-    // --- ROW 2: THE POPUPS ---
     if (showInitMenu)   DrawInitMenu(20, startY + 60);
     if (showAddMenu)    DrawAddMenu(20, startY + 60);
     if (showDeleteMenu) DrawDeleteMenu(20, startY + 60);
@@ -103,36 +92,27 @@ void DLLState::DrawToolbar() {
     if (showSearchMenu) DrawSearchMenu(20, startY + 60);
 }
 
-// ---------------------------------------------------------
-// FLATTENED POPUP SCREENS (To fit inside the 200px Toolbar)
-// ---------------------------------------------------------
 void DLLState::DrawInitMenu(float x, float y) {
     Color panelBg = UIHelper::GetCanvasBg(config);
     Color outlineCol = UIHelper::GetOutlineCol(config);
     Color textCol = UIHelper::GetTextCol(config);
 
-    // 🌟 WIDENED PANEL to 720, TALLER to 130
     DrawRectangleRounded({x, y, 720.0f, 130.0f}, 0.1f, 8, panelBg);
     DrawRectangleRoundedLines({x, y, 720.0f, 130.0f}, 0.1f, 8, outlineCol);
 
     float fontSize = 24.0f;
 
-    // --- ROW 1 ---
-    // Button: Empty
     if (UIHelper::DrawModernBtn({x + 15.0f, y + 15.0f, 190.0f, 40.0f}, "Empty (Clear)", true, config)) {
         Visualizer::Instance().ClearHistory();
         dll.init({});
         Visualizer::Instance().SetPlaying(false);
     }
 
-    // Text: A =
     Vector2 lblATw = MeasureTextEx(g_App->mainFont, "A =", fontSize, 1.0f);
     DrawTextEx(g_App->mainFont, "A =", {x + 225.0f, y + 15.0f + 20.0f - lblATw.y/2.0f}, fontSize, 1.0f, textCol);
 
-    // Box: Input
     if (GuiTextBox((Rectangle){x + 275.0f, y + 15.0f, 200.0f, 40.0f}, inputBuffer, 64, isInputActive)) isInputActive = !isInputActive;
 
-    // Button: Go
     if (UIHelper::DrawModernBtn({x + 490.0f, y + 15.0f, 60.0f, 40.0f}, "Go", true, config) || (IsKeyPressed(KEY_ENTER))) {
         Visualizer::Instance().ClearHistory();
         std::vector<int> values;
@@ -146,15 +126,11 @@ void DLLState::DrawInitMenu(float x, float y) {
         inputBuffer[0] = '\0'; isInputActive = false;
     }
 
-    // --- ROW 2 ---
-    // Text: Random N =
     Vector2 lblNTw = MeasureTextEx(g_App->mainFont, "Random N =", fontSize, 1.0f);
     DrawTextEx(g_App->mainFont, "Random N =", {x + 15.0f, y + 70.0f + 20.0f - lblNTw.y/2.0f}, fontSize, 1.0f, textCol);
 
-    // Box: N Buffer
     if (GuiTextBox((Rectangle){x + 165.0f, y + 70.0f, 70.0f, 40.0f}, nBuffer, 16, nInputActive)) nInputActive = !nInputActive;
 
-    // Button: Generate
     if (UIHelper::DrawModernBtn({x + 250.0f, y + 70.0f, 150.0f, 40.0f}, "Generate", true, config) || (IsKeyPressed(KEY_ENTER))) {
         Visualizer::Instance().ClearHistory();
         int n = atoi(nBuffer);
@@ -168,7 +144,6 @@ void DLLState::DrawInitMenu(float x, float y) {
         nBuffer[0] = '\0'; nInputActive = false;
     }
 
-    // Button: Browse File
     if (UIHelper::DrawModernBtn({x + 415.0f, y + 70.0f, 220.0f, 40.0f}, "Browse File...", true, config)) {
         const char *filterPatterns[1] = { "*.txt" };
         const char *filePath = tinyfd_openFileDialog("Select Input File", "", 1, filterPatterns, "Text Files", 0);
@@ -300,7 +275,6 @@ void DLLState::DrawPlayback() {
         DrawRectangleRounded(rect, 0.4f, 8, bg);
         DrawRectangleRoundedLines(rect, 0.4f, 8, outlineCol);
 
-        // 🌟 PERFECT CENTERING WITH 24px FONT
         float fontSize = 24.0f;
         Vector2 tw = MeasureTextEx(g_App->mainFont, text, fontSize, 1.0f);
         DrawTextEx(g_App->mainFont, text,
@@ -326,7 +300,6 @@ void DLLState::DrawPlayback() {
 void DLLState::DrawPseudocode() {
     const AnimationState& state = Visualizer::Instance().GetCurrentState();
 
-    // 🌟 LOCKED DIMENSIONS
     float panelW = 600.0f;
     float panelH = 200.0f;
     float startX = GetScreenWidth() - panelW;
@@ -336,40 +309,32 @@ void DLLState::DrawPseudocode() {
     Color outlineCol = config.isDarkMode ? Color{162, 151, 137, 255} : Color{238, 217, 217, 255};
     Color textCol = config.isDarkMode ? Color{226, 215, 193, 255} : Color{40, 40, 40, 255};
 
-    // Draw Base Panel
     DrawRectangle(startX, startY, panelW, panelH, panelBg);
     DrawRectangleLines(startX, startY, panelW, panelH, outlineCol);
 
-    // Draw Header (Drawn BEFORE scissor mode so it never scrolls!)
     DrawTextEx(g_App->boldFont, "Pseudocode", {startX + 15.0f, startY + 15.0f}, 24.0f, 1.0f, textCol);
     DrawLine(startX, startY + 45.0f, startX + panelW, startY + 45.0f, outlineCol);
 
     if (state.codeText.empty()) return;
 
-    // --- 🌟 AUTO-SCROLL MATH ---
     float lineSpacing = 28.0f;
-    float viewableH = panelH - 55.0f; // Space below the header
+    float viewableH = panelH - 55.0f;
     float contentH = state.codeText.size() * lineSpacing;
 
-    static float scrollY = 0.0f; // Keeps track of our scroll position
+    static float scrollY = 0.0f;
     float activeY = state.codeLineIndex * lineSpacing;
 
-    // Calculate where we need to scroll to keep the active line vertically centered
     float targetScroll = activeY - (viewableH / 2.0f) + (lineSpacing / 2.0f);
 
-    // Clamp the scrolling so it doesn't scroll past the top or bottom
     if (targetScroll < 0) targetScroll = 0;
     if (targetScroll > contentH - viewableH && contentH > viewableH) targetScroll = contentH - viewableH;
     if (contentH <= viewableH) targetScroll = 0;
 
-    // Smooth LERP (Linear Interpolation) for that premium sliding animation!
     scrollY += (targetScroll - scrollY) * 0.1f;
 
-    // --- 🌟 START CLIPPING MASK ---
-    // Anything drawn after this line will be hidden if it goes outside the box!
     BeginScissorMode(startX, startY + 46, panelW, panelH - 46);
 
-    float y = startY + 55.0f - scrollY; // Apply the scroll offset to the starting Y
+    float y = startY + 55.0f - scrollY;
 
     for (int i = 0; i < state.codeText.size(); i++) {
         if (i == state.codeLineIndex) {
@@ -381,7 +346,6 @@ void DLLState::DrawPseudocode() {
         y += lineSpacing;
     }
 
-    // --- 🌟 END CLIPPING MASK ---
     EndScissorMode();
 }
 
@@ -403,7 +367,6 @@ void DLLState::DrawSettingsModal() {
 
     GuiCheckBox((Rectangle){startX + 30.0f, startY + 80.0f, 24.0f, 24.0f}, " Dark Mode", &config.isDarkMode);
 
-    // 🌟 DYNAMICALLY CENTERED LABELS FOR 20px SLIDERS
     float lblSize = 22.0f;
 
     Vector2 radTw = MeasureTextEx(g_App->mainFont, "Node Radius", lblSize, 1.0f);

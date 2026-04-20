@@ -1,5 +1,5 @@
 #include "../../include/Renderers/DLLRenderer.h"
-#include "../../include/App.h" // 🌟 ADDED APP.H
+#include "../../include/App.h"
 #include "raylib.h"
 #include <string>
 #include <cmath>
@@ -87,18 +87,15 @@ namespace DLLRenderer {
             DrawCircle(node.drawX, node.drawY, config.nodeRadius, currentBorder);
             DrawCircle(node.drawX, node.drawY, config.nodeRadius - config.edgeThickness, nodeBgCol);
 
-            // 🌟 PERFECTLY CENTERED NODE TEXT
             std::string text = std::to_string(node.data);
             Vector2 textSize = MeasureTextEx(g_App->mainFont, text.c_str(), config.textSize, 1.0f);
             DrawTextEx(g_App->mainFont, text.c_str(), {node.drawX - textSize.x / 2.0f, node.drawY - textSize.y / 2.0f}, config.textSize, 1.0f, textCol);
 
-            // Index Text
             const char* idxText = TextFormat("%d", node.id);
             Vector2 idxSize = MeasureTextEx(g_App->mainFont, idxText, 16.0f, 1.0f);
             DrawTextEx(g_App->mainFont, idxText, {node.drawX - idxSize.x / 2.0f, node.drawY + config.nodeRadius + 5.0f}, 16.0f, 1.0f, currentBorder);
         }
 
-        // 🌟 BOLD, 24px STATE MESSAGE
         DrawTextEx(g_App->boldFont, state.message.c_str(), {20.0f, 20.0f}, 24.0f, 1.0f, textCol);
     }
 }

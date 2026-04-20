@@ -47,6 +47,5 @@ public:
     void updateNode(int oldVal, int newVal);
     void searchNode(int value);
 
-    // 🐛 MOVED HERE: Now AVLState.cpp is allowed to use it!
     std::vector<VisualNode> captureState(int h1 = -1, int h2 = -1, Color c = BLUE);
 };

@@ -1,5 +1,5 @@
 #include "../../include/Renderers/TrieRenderer.h"
-#include "../../include/App.h" // 🌟 ADDED APP.H
+#include "../../include/App.h"
 #include "raylib.h"
 #include <string>
 #include <unordered_map>
@@ -49,12 +49,10 @@ namespace TrieRenderer {
                 text = string(1, (char)node.data);
             }
 
-            // 🌟 PERFECTLY CENTERED NODE TEXT
             Vector2 textSize = MeasureTextEx(g_App->mainFont, text.c_str(), fontSize, 1.0f);
             DrawTextEx(g_App->mainFont, text.c_str(), {node.drawX - textSize.x/2.0f, node.drawY - textSize.y/2.0f}, fontSize, 1.0f, textCol);
         }
 
-        // 🌟 BOLD, 24px STATE MESSAGE
         DrawTextEx(g_App->boldFont, state.message.c_str(), {20.0f, 20.0f}, 24.0f, 1.0f, textCol);
     }
 }

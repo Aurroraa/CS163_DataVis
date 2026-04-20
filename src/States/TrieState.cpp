@@ -14,7 +14,7 @@
 
 TrieState::TrieState() {
     Visualizer::Instance().ClearHistory();
-    trie.init({}); // Example words!
+    trie.init({});
     playbackSpeed = 0.5f;
 }
 
@@ -28,23 +28,19 @@ void TrieState::Init() {
 void TrieState::Update() {Visualizer::Instance().Update();}
 
 void TrieState::Draw() {
-    // 1. Themed Canvas
     DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight() - 200, UIHelper::GetCanvasBg(config));
     Visualizer::Instance().DrawCanvas();
 
     Color textCol = UIHelper::GetTextCol(config);
     float btnX = GetScreenWidth() - 150;
 
-    // Home Button
     float homeBtnX = btnX - 110;
     if (UIHelper::DrawModernBtn({homeBtnX, 10, 90, 36}, "Home", false, config)) {
         g_App->ChangeState(new SelectState());
     }
 
-    // Hamburger Menu
     if (UIHelper::DrawHamburgerBtn({btnX, 10, 40, 36}, config)) isSettingsOpen = !isSettingsOpen;
 
-    // 3. Draw Data Structure
     TrieRenderer::Draw(Visualizer::Instance().GetRenderState(), config);
 
     DrawToolbar();
@@ -63,7 +59,6 @@ void TrieState::DrawToolbar() {
     int btnWidth = 100; int gap = 10; float x = 20;
     #define CLOSE_ALL_MENUS() showInitMenu = showAddMenu = showDeleteMenu = showUpdateMenu = showSearchMenu = false;
 
-    // --- ROW 1: THE MAIN BUTTONS ---
     if (UIHelper::DrawModernBtn({x, startY + 10, (float)btnWidth, 40}, "Init", showInitMenu, config)) {
         bool wasOpen = showInitMenu; CLOSE_ALL_MENUS(); showInitMenu = !wasOpen;
     } x += btnWidth + gap;
@@ -84,7 +79,6 @@ void TrieState::DrawToolbar() {
         bool wasOpen = showSearchMenu; CLOSE_ALL_MENUS(); showSearchMenu = !wasOpen;
     }
 
-    // --- ROW 2: THE POPUPS ---
     if (showInitMenu)   DrawInitMenu(20, startY + 60);
     if (showAddMenu)    DrawAddMenu(20, startY + 60);
     if (showDeleteMenu) DrawDeleteMenu(20, startY + 60);
@@ -98,7 +92,6 @@ void TrieState::DrawInitMenu(float x, float y) {
     DrawRectangleRoundedLines({x, y, 760.0f, 130.0f}, 0.1f, 8, outlineCol);
     float fontSize = 24.0f;
 
-    // --- ROW 1 ---
     if (UIHelper::DrawModernBtn({x + 15.0f, y + 15.0f, 190.0f, 40.0f}, "Empty (Clear)", true, config)) {
         Visualizer::Instance().ClearHistory(); trie.init({}); Visualizer::Instance().SetPlaying(false);
     }
@@ -117,7 +110,6 @@ void TrieState::DrawInitMenu(float x, float y) {
         }
     }
 
-    // --- ROW 2 ---
     Vector2 lblNTw = MeasureTextEx(g_App->mainFont, "Random N =", fontSize, 1.0f);
     DrawTextEx(g_App->mainFont, "Random N =", {x + 15.0f, y + 70.0f + 20.0f - lblNTw.y/2.0f}, fontSize, 1.0f, textCol);
 
@@ -256,7 +248,6 @@ void TrieState::DrawPlayback() {
         DrawRectangleRounded(rect, 0.4f, 8, bg);
         DrawRectangleRoundedLines(rect, 0.4f, 8, outlineCol);
 
-        // 🌟 PERFECT CENTERING WITH 24px FONT
         float fontSize = 24.0f;
         Vector2 tw = MeasureTextEx(g_App->mainFont, text, fontSize, 1.0f);
         DrawTextEx(g_App->mainFont, text,
@@ -282,7 +273,6 @@ void TrieState::DrawPlayback() {
 void TrieState::DrawPseudocode() {
     const AnimationState& state = Visualizer::Instance().GetCurrentState();
 
-    // 🌟 LOCKED DIMENSIONS
     float panelW = 600.0f;
     float panelH = 200.0f;
     float startX = GetScreenWidth() - panelW;
@@ -292,40 +282,33 @@ void TrieState::DrawPseudocode() {
     Color outlineCol = config.isDarkMode ? Color{162, 151, 137, 255} : Color{238, 217, 217, 255};
     Color textCol = config.isDarkMode ? Color{226, 215, 193, 255} : Color{40, 40, 40, 255};
 
-    // Draw Base Panel
     DrawRectangle(startX, startY, panelW, panelH, panelBg);
     DrawRectangleLines(startX, startY, panelW, panelH, outlineCol);
 
-    // Draw Header (Drawn BEFORE scissor mode so it never scrolls!)
     DrawTextEx(g_App->boldFont, "Pseudocode", {startX + 15.0f, startY + 15.0f}, 24.0f, 1.0f, textCol);
     DrawLine(startX, startY + 45.0f, startX + panelW, startY + 45.0f, outlineCol);
 
     if (state.codeText.empty()) return;
 
-    // --- 🌟 AUTO-SCROLL MATH ---
     float lineSpacing = 28.0f;
-    float viewableH = panelH - 55.0f; // Space below the header
+    float viewableH = panelH - 55.0f;
     float contentH = state.codeText.size() * lineSpacing;
 
-    static float scrollY = 0.0f; // Keeps track of our scroll position
+    static float scrollY = 0.0f;
     float activeY = state.codeLineIndex * lineSpacing;
 
-    // Calculate where we need to scroll to keep the active line vertically centered
     float targetScroll = activeY - (viewableH / 2.0f) + (lineSpacing / 2.0f);
 
-    // Clamp the scrolling so it doesn't scroll past the top or bottom
     if (targetScroll < 0) targetScroll = 0;
     if (targetScroll > contentH - viewableH && contentH > viewableH) targetScroll = contentH - viewableH;
     if (contentH <= viewableH) targetScroll = 0;
 
-    // Smooth LERP (Linear Interpolation) for that premium sliding animation!
     scrollY += (targetScroll - scrollY) * 0.1f;
 
-    // --- 🌟 START CLIPPING MASK ---
-    // Anything drawn after this line will be hidden if it goes outside the box!
+
     BeginScissorMode(startX, startY + 46, panelW, panelH - 46);
 
-    float y = startY + 55.0f - scrollY; // Apply the scroll offset to the starting Y
+    float y = startY + 55.0f - scrollY;
 
     for (int i = 0; i < state.codeText.size(); i++) {
         if (i == state.codeLineIndex) {
@@ -337,7 +320,6 @@ void TrieState::DrawPseudocode() {
         y += lineSpacing;
     }
 
-    // --- 🌟 END CLIPPING MASK ---
     EndScissorMode();
 }
 
@@ -359,7 +341,6 @@ void TrieState::DrawSettingsModal() {
 
     GuiCheckBox((Rectangle){startX + 30.0f, startY + 80.0f, 24.0f, 24.0f}, " Dark Mode", &config.isDarkMode);
 
-    // 🌟 DYNAMICALLY CENTERED LABELS FOR 20px SLIDERS
     float lblSize = 22.0f;
 
     Vector2 radTw = MeasureTextEx(g_App->mainFont, "Node Radius", lblSize, 1.0f);

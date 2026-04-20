@@ -99,7 +99,6 @@ int Graph::getClickedVertex(float mouseX, float mouseY) {
     for (const auto& pair : vertices) {
         float dx = pair.second.x - mouseX;
         float dy = pair.second.y - mouseY;
-        // Check if the click is inside the circle (radius 26)
         if (std::sqrt(dx*dx + dy*dy) <= 26.0f) {
             return pair.first;
         }
@@ -107,7 +106,6 @@ int Graph::getClickedVertex(float mouseX, float mouseY) {
     return -1;
 }
 
-// 🌟 1. ADD THIS ANYWHERE: Toggles the fixed state
 void Graph::toggleFixed(int id) {
     if (vertices.count(id)) {
         vertices[id].isFixed = !vertices[id].isFixed;
@@ -118,7 +116,6 @@ void Graph::updatePhysics(float minX, float minY, float maxX, float maxY) {
     float centerX = minX + (maxX - minX) / 2.0f;
     float centerY = minY + (maxY - minY) / 2.0f;
 
-    // 1. Repulsion (Soft push so they don't blast apart)
     for (auto& p1 : vertices) {
         for (auto& p2 : vertices) {
             if (p1.first == p2.first) continue;
@@ -129,14 +126,13 @@ void Graph::updatePhysics(float minX, float minY, float maxX, float maxY) {
             if (distSq < 1.0f) { dx = 1.0f; dy = 1.0f; distSq = 2.0f; }
 
             if (distSq < 80000.0f) {
-                float force = 400.0f / distSq; // 🌟 Much softer push
+                float force = 400.0f / distSq;
                 p1.second.vx += dx * force;
                 p1.second.vy += dy * force;
             }
         }
     }
 
-    // 2. Attraction (Gentle springs)
     for (const auto& pair : adjList) {
         int from = pair.first;
         for (const auto& edge : pair.second) {
@@ -147,7 +143,7 @@ void Graph::updatePhysics(float minX, float minY, float maxX, float maxY) {
                 float dist = std::sqrt(dx*dx + dy*dy);
 
                 if (dist > 0.0f) {
-                    float force = (dist - 130.0f) * 0.005f; // 🌟 Springs are 3x weaker
+                    float force = (dist - 130.0f) * 0.005f;
                     vertices[from].vx += (dx / dist) * force;
                     vertices[from].vy += (dy / dist) * force;
                     vertices[to].vx -= (dx / dist) * force;
@@ -157,25 +153,21 @@ void Graph::updatePhysics(float minX, float minY, float maxX, float maxY) {
         }
     }
 
-    // 3. Gravity, Velocity & Anti-Twitch
     for (auto& pair : vertices) {
         GraphNode& n = pair.second;
         if (!n.isFixed) {
-            n.vx += (centerX - n.x) * 0.001f; // Barely any gravity
+            n.vx += (centerX - n.x) * 0.001f;
             n.vy += (centerY - n.y) * 0.001f;
 
             n.x += n.vx * dt;
             n.y += n.vy * dt;
 
-            // 🌟 EXTREME FRICTION: Feels like moving through thick liquid
             n.vx *= 0.45f;
             n.vy *= 0.45f;
 
-            // 🌟 AGGRESSIVE ANTI-TWITCH: Go to sleep much earlier
             if (std::abs(n.vx) < 1.0f) n.vx = 0.0f;
             if (std::abs(n.vy) < 1.0f) n.vy = 0.0f;
 
-            // Wall collision (almost zero bounce)
             if (n.x < minX + 30.0f) { n.x = minX + 30.0f; n.vx *= -0.1f; }
             if (n.x > maxX - 30.0f) { n.x = maxX - 30.0f; n.vx *= -0.1f; }
             if (n.y < minY + 30.0f) { n.y = minY + 30.0f; n.vy *= -0.1f; }
@@ -198,7 +190,6 @@ AnimationState Graph::captureState(int highlightNode, int highlightEdgeFrom, int
         v.drawX = v.x; v.drawY = v.y;
         v.color = (v.id == highlightNode) ? c : BLUE;
 
-        // Hijack highlightIndex to tell the renderer if it's Pinned!
         v.highlightIndex = pair.second.isFixed ? 1 : 0;
 
         state.nodes.push_back(v);
@@ -270,7 +261,7 @@ void Graph::runKruskalMST() {
 
     auto getCurState = [&](int curU = -1, int curV = -1, Color curColor = BLUE, bool hideUnused = false) {
         AnimationState state = captureState();
-        std::vector<VisualEdge> filteredEdges; // Temporary list
+        std::vector<VisualEdge> filteredEdges;
 
         for (auto& ve : state.edges) {
             bool inMST = false;
@@ -282,24 +273,22 @@ void Graph::runKruskalMST() {
             }
 
             if (inMST) {
-                ve.color = GREEN; // Locked into MST
+                ve.color = GREEN;
                 filteredEdges.push_back(ve);
             } else if ((ve.fromId == curU && ve.toId == curV) ||
                        (!isDirected && ve.fromId == curV && ve.toId == curU)) {
-                ve.color = curColor; // Currently evaluating this edge
+                ve.color = curColor;
                 filteredEdges.push_back(ve);
                        } else if (!hideUnused) {
-                           // Only keep the standard grey edges if we aren't hiding them!
                            filteredEdges.push_back(ve);
                        }
         }
 
-        state.edges = filteredEdges; // Overwrite with the filtered list
+        state.edges = filteredEdges;
         return state;
     };
     Visualizer::Instance().RecordState("", 0, getCurState(), code);
 
-    // 3. Evaluate edges
     for (const auto& e : edges) {
         Visualizer::Instance().RecordState("", 1, getCurState(e.u, e.v, ORANGE), code);
 
@@ -312,14 +301,11 @@ void Graph::runKruskalMST() {
             Visualizer::Instance().RecordState("", 2, getCurState(e.u, e.v, RED), code);
         }
     }
-    // ... end of your Kruskal loop ...
 
-    // 🌟 THE FIX: Manually build the final frame to forcefully drop unused edges
     AnimationState finalState = captureState();
     std::vector<VisualEdge> finalEdges;
 
     for (auto& ve : finalState.edges) {
-        // Check if this edge is in our MST list
         bool inMST = false;
         for (auto& mstE : mstEdges) {
             if ((ve.fromId == mstE.first && ve.toId == mstE.second) ||
@@ -329,14 +315,14 @@ void Graph::runKruskalMST() {
                 }
         }
 
-        // ONLY add it to the final frame if it is part of the MST!
+
         if (inMST) {
             ve.color = GREEN;
             finalEdges.push_back(ve);
         }
     }
 
-    finalState.edges = finalEdges; // Overwrite the edges list
+    finalState.edges = finalEdges;
     Visualizer::Instance().RecordState("", -1, finalState, code);
 }
 
@@ -369,7 +355,7 @@ void Graph::runDijkstra(int startVertex) {
 
     auto buildTable = [&]() {
         std::vector<std::vector<std::string>> table;
-        table.push_back({"V", "Known", "Dist", "Path"}); // Header
+        table.push_back({"V", "Known", "Dist", "Path"});
         for (const auto& p : vertices) {
             int v = p.first;
             std::string k = known[v] ? "T" : "F";
@@ -384,14 +370,12 @@ void Graph::runDijkstra(int startVertex) {
         AnimationState state = captureState(activeNode, edgeU, edgeV, c);
         state.table = buildTable();
 
-        // Color locked-in shortest paths green
         for (auto& ve : state.edges) {
             for (const auto& p : vertices) {
                 int v = p.first;
                 int parent = path[v];
                 if (parent != -1) {
                     if ((ve.fromId == parent && ve.toId == v) || (!isDirected && ve.fromId == v && ve.toId == parent)) {
-                        // Don't overwrite the active highlighted edge
                         if (ve.color.r == DARKGRAY.r && ve.color.g == DARKGRAY.g && ve.color.b == DARKGRAY.b) {
                             ve.color = GREEN;
                         }

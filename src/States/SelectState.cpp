@@ -20,7 +20,7 @@ struct DSCard {
     char iconType;
 };
 
-void DrawDSIcon(float x, float y, float size, char type, Color color, Color bgColor, float thickness); // Keep your existing implementation
+void DrawDSIcon(float x, float y, float size, char type, Color color, Color bgColor, float thickness);
 
 bool DrawDataStructureCard(Rectangle rect, DSCard card, const UIConfig& config) {
     Vector2 mouse = GetMousePosition();
@@ -44,18 +44,15 @@ bool DrawDataStructureCard(Rectangle rect, DSCard card, const UIConfig& config) 
 
     DrawDSIcon(centerX, rect.y + rect.height * 0.25f, iconSize, card.iconType, currentOutline, cardBgCol, config.edgeThickness);
 
-    // 🌟 BIGGER CARD TITLE
     float nameSize = 28.0f;
     Vector2 nameTw = MeasureTextEx(g_App->boldFont, card.name.c_str(), nameSize, 1.0f);
     DrawTextEx(g_App->boldFont, card.name.c_str(), {centerX - nameTw.x/2.0f, rect.y + rect.height * 0.50f}, nameSize, 1.0f, textCol);
 
-    // 🌟 ADDED MISSING DESCRIPTION
     float descSize = 20.0f;
     Color descCol = Fade(textCol, 0.7f);
     Vector2 descTw = MeasureTextEx(g_App->mainFont, card.description.c_str(), descSize, 1.0f);
     DrawTextEx(g_App->mainFont, card.description.c_str(), {centerX - descTw.x/2.0f, rect.y + rect.height * 0.65f}, descSize, 1.0f, descCol);
 
-    // Bigger Start Button on Card
     Rectangle btnRect = {centerX - 75.0f, rect.y + rect.height * 0.80f, 150.0f, 45.0f};
     if (UIHelper::DrawModernBtn(btnRect, "Start", isHovering, config) || (isHovering && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))) {
         return true;
@@ -67,24 +64,20 @@ void SelectState::Draw() {
     ClearBackground(GetColor(0xF5F5F5FF));
     UIConfig currentConfig;
 
-    // Header
     Color headerBg = GetColor(0x021A54FF);
-    float headerH = 120.0f; // Made header slightly taller
+    float headerH = 120.0f;
     DrawRectangle(0, 0, GetScreenWidth(), headerH, headerBg);
     DrawRectangleGradientV(0, headerH, GetScreenWidth(), 8, Fade(BLACK, 0.2f), BLANK);
 
-    // 🌟 BIGGER HEADER TITLE
     float titleFontSize = 56.0f;
     Vector2 titleTw = MeasureTextEx(g_App->boldFont, "CS Visualizer", titleFontSize, 2.0f);
     DrawTextEx(g_App->boldFont, "CS Visualizer", {GetScreenWidth() / 2.0f - titleTw.x / 2.0f, 20.0f}, titleFontSize, 2.0f, WHITE);
 
-    // 🌟 BIGGER HEADER SUBTITLE
     float subFontSize = 26.0f;
     Color subtitleCol = Fade(WHITE, 0.7f);
     Vector2 subTw = MeasureTextEx(g_App->mainFont, "Select Data Structure to start visualization", subFontSize, 1.0f);
     DrawTextEx(g_App->mainFont, "Select Data Structure to start visualization", {GetScreenWidth() / 2.0f - subTw.x / 2.0f, 20.0f + titleTw.y + 5.0f}, subFontSize, 1.0f, subtitleCol);
 
-    // Home Button
     Rectangle homeRect = {30, 40, 100, 45};
     Vector2 mouse = GetMousePosition();
     bool hoverHome = CheckCollisionPointRec(mouse, homeRect);
@@ -100,7 +93,6 @@ void SelectState::Draw() {
         return;
     }
 
-    // Grid Layout
     std::vector<DSCard> cards = {
         {"Graph Algorithms", "Visualise Shortest Path and MST.", 'G'},
         {"Doubly Linked List", "Interactive node insertion & deletion.", 'L'},
@@ -115,8 +107,8 @@ void SelectState::Draw() {
     float cardW = (GetScreenWidth() - (cols + 1) * padding) / cols;
     float cardH = (GetScreenHeight() - headerH - (rows + 1) * padding) / rows;
 
-    if (cardW > 420.0f) cardW = 420.0f; // Allowed cards to get a bit wider
-    if (cardH > 350.0f) cardH = 350.0f; // Allowed cards to get a bit taller
+    if (cardW > 420.0f) cardW = 420.0f;
+    if (cardH > 350.0f) cardH = 350.0f;
 
     float gridH = rows * cardH + (rows - 1) * padding;
     float startY = headerH + padding + (GetScreenHeight() - headerH - gridH - padding * 2) / 2.0f;
@@ -143,11 +135,8 @@ void SelectState::Draw() {
         }
     }
 }
-// ---------------------------------------------------------
-// Helper: Draw Geometric Icons
-// ---------------------------------------------------------
+
 void DrawDSIcon(float x, float y, float size, char type, Color color, Color bgColor, float thickness) {
-    // Keep your exact existing DrawDSIcon logic here!
     float r = size * 0.12f;
     float offset = size * 0.25f;
 

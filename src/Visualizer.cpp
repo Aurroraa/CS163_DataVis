@@ -3,16 +3,14 @@
 #include "raylib.h"
 #include "App.h"
 
-// --- Playback Logic ---
 
 void Visualizer::Update() {
     if (isPlaying) {
-        timer += GetFrameTime(); // Add time passed since last frame
+        timer += GetFrameTime();
         if (timer >= playbackSpeed) {
             timer = 0.0f;
-            NextStep(); // Auto-advance
+            NextStep();
 
-            // Stop if we reach the end
             if (currentStep >= history.size() - 1) {
                 isPlaying = false;
             }
@@ -57,7 +55,6 @@ const AnimationState& Visualizer::GetCurrentState() const {
     return history[currentStep];
 }
 
-// --- Drawing & Recording ---
 
 void Visualizer::DrawCanvas() {
     if (history.empty()) {
@@ -65,7 +62,6 @@ void Visualizer::DrawCanvas() {
         float fontSize = 24.0f;
         Vector2 msgSize = MeasureTextEx(g_App->mainFont, emptyMsg, fontSize, 1.0f);
 
-        // 🌟 Perfectly center the message in the canvas area (above the 200px toolbar)
         float cx = GetScreenWidth() / 2.0f - msgSize.x / 2.0f;
         float cy = (GetScreenHeight() - 200.0f) / 2.0f - msgSize.y / 2.0f;
 
@@ -75,10 +71,7 @@ void Visualizer::DrawCanvas() {
 
     const AnimationState& state = history[currentStep];
 
-    // Delegate to Renderer
-    // DLLRenderer::Draw(state);
 
-    // 🌟 Draw Step Counter using the bold custom font
     const char* stepText = TextFormat("Step: %d / %d", currentStep + 1, (int)history.size());
     DrawTextEx(g_App->boldFont, stepText, {20.0f, (float)GetScreenHeight() - 235.0f}, 24.0f, 1.0f, DARKGRAY);
 }
@@ -123,7 +116,6 @@ AnimationState Visualizer::GetRenderState() const {
 
     for (auto& currNode : renderState.nodes) {
         for (const auto& nextNode : nextState.nodes) {
-            // 🐛 FIX: Match by unique ID so duplicate values don't criss-cross!
             if (currNode.id == nextNode.id) {
                 currNode.drawX = currNode.x + (nextNode.x - currNode.x) * smooth_t;
                 currNode.drawY = currNode.y + (nextNode.y - currNode.y) * smooth_t;
@@ -139,6 +131,5 @@ void Visualizer::RecordState(std::string message, int codeLineIndex, AnimationSt
     state.codeLineIndex = codeLineIndex;
     state.codeText = codeText;
 
-    // Change these two lines to match your exact variable names!
     history.push_back(state);
 }
